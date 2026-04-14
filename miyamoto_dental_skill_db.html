@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>星の森デンタル｜歯科衛生士スキルデータベース</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f8f8f6;
+    --surface: #ffffff;
+    --surface2: #f2f2ef;
+    --border: rgba(0,0,0,0.1);
+    --border2: rgba(0,0,0,0.18);
+    --text: #1a1a18;
+    --text2: #6b6b65;
+    --text3: #9e9e97;
+    --teal: #1D9E75;
+    --teal-dark: #085041;
+    --teal-light: #E1F5EE;
+    --teal-mid: #9FE1CB;
+    --rad-md: 8px;
+    --rad-lg: 12px;
+    --rad-xl: 16px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a18;
+      --surface: #242422;
+      --surface2: #2e2e2b;
+      --border: rgba(255,255,255,0.1);
+      --border2: rgba(255,255,255,0.2);
+      --text: #f0f0ec;
+      --text2: #9a9a94;
+      --text3: #606058;
+      --teal-light: #04342C;
+      --teal-mid: #0F6E56;
+    }
+  }
+  body {
+    font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+  .page { max-width: 960px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
+
+  /* Header */
+  .header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 1rem; border-bottom: 0.5px solid var(--border); margin-bottom: 1.5rem; flex-wrap: wrap; gap: 10px; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .logo { width: 44px; height: 44px; border-radius: 12px; background: var(--teal-dark); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .brand-text .title { font-size: 16px; font-weight: 600; color: var(--text); }
+  .brand-text .sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .badge { font-size: 11px; background: var(--teal-light); color: var(--teal-dark); padding: 5px 13px; border-radius: 20px; font-weight: 600; white-space: nowrap; }
+
+  /* Stats */
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+  @media (max-width: 480px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+  .stat { background: var(--surface2); border-radius: var(--rad-md); padding: .9rem 1rem; }
+  .stat-label { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
+  .stat-value { font-size: 24px; font-weight: 600; color: var(--text); line-height: 1.1; }
+  .stat-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+
+  /* Controls */
+  .controls { display: flex; align-items: center; gap: 8px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+  .tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+  .tab { font-size: 12px; padding: 5px 14px; border-radius: 20px; border: 0.5px solid var(--border2); background: transparent; cursor: pointer; color: var(--text2); transition: all 0.15s; font-family: inherit; }
+  .tab:hover { border-color: var(--teal); color: var(--teal); }
+  .tab.active { background: var(--teal-dark); color: var(--teal-light); border-color: var(--teal-dark); }
+  .search { flex: 1; min-width: 160px; font-size: 13px; padding: 6px 13px; border-radius: var(--rad-md); border: 0.5px solid var(--border2); background: var(--surface2); color: var(--text); font-family: inherit; outline: none; transition: border-color 0.15s; }
+  .search:focus { border-color: var(--teal); }
+
+  /* Grid */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(258px, 1fr)); gap: 12px; }
+  .card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--rad-lg); padding: 1.1rem; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; }
+  .card:hover { border-color: var(--border2); box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  .card.sel { border: 1.5px solid var(--teal); }
+  .card-top { display: flex; align-items: center; gap: 10px; margin-bottom: 13px; }
+  .av { width: 42px; height: 42px; border-radius: 50%; background: var(--teal-light); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--teal-dark); flex-shrink: 0; }
+  .c-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .meta { display: flex; align-items: center; gap: 6px; margin-top: 3px; }
+  .lv { font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 500; }
+  .lv-s { background: #9FE1CB; color: #085041; }
+  .lv-m { background: #B5D4F4; color: #0C447C; }
+  .lv-j { background: #D3D1C7; color: #444441; }
+  .yr { font-size: 10px; color: var(--text3); }
+  .card-body { display: flex; align-items: center; justify-content: space-between; }
+  .sc-label { font-size: 10px; color: var(--text2); }
+  .sc-val { font-size: 28px; font-weight: 600; color: var(--text); line-height: 1.1; }
+  .sc-max { font-size: 12px; color: var(--text3); }
+  .mini { width: 76px; height: 76px; }
+
+  /* Detail panel */
+  .detail { background: var(--surface); border: 1px solid var(--teal); border-radius: var(--rad-lg); padding: 1.5rem; margin-top: 14px; }
+  .dh { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 10px; }
+  .dh-left { display: flex; align-items: center; gap: 12px; }
+  .dh-av { width: 38px; height: 38px; border-radius: 50%; background: var(--teal-light); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--teal-dark); flex-shrink: 0; }
+  .dt { font-size: 16px; font-weight: 600; color: var(--text); }
+  .dt-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .close-btn { font-size: 12px; color: var(--text2); cursor: pointer; padding: 5px 12px; border: 0.5px solid var(--border2); border-radius: var(--rad-md); background: transparent; font-family: inherit; transition: all 0.15s; }
+  .close-btn:hover { background: var(--surface2); }
+  .dgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  @media (max-width: 560px) { .dgrid { grid-template-columns: 1fr; } }
+  .section-label { font-size: 11px; color: var(--text2); margin-bottom: 10px; }
+  .sk-row { margin-bottom: 9px; }
+  .sk-name-row { font-size: 11px; color: var(--text2); margin-bottom: 3px; display: flex; justify-content: space-between; }
+  .sk-score { font-size: 11px; font-weight: 600; color: var(--text); }
+  .bar-bg { height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+  .bar-hi { background: var(--teal); }
+  .bar-mid { background: #BA7517; }
+  .bar-lo { background: #E24B4A; }
+  .radar-wrap { position: relative; width: 100%; }
+  .radar-legend { display: flex; gap: 16px; margin-top: 8px; flex-wrap: wrap; }
+  .radar-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); }
+  .radar-legend-line { width: 14px; height: 2px; border-radius: 2px; }
+  .comment { margin-top: 1.25rem; padding: 12px 15px; background: var(--surface2); border-left: 2px solid var(--teal); }
+  .comment-label { font-size: 10px; color: var(--text2); margin-bottom: 5px; font-weight: 600; letter-spacing: 0.05em; }
+  .comment-text { font-size: 13px; color: var(--text); line-height: 1.7; }
+
+  /* Empty state */
+  .empty { text-align: center; padding: 3rem 1rem; color: var(--text3); font-size: 14px; }
+
+  /* Footer */
+  .footer { margin-top: 2rem; padding-top: 1rem; border-top: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+  .footer-note { font-size: 11px; color: var(--text3); }
+  .footer-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn-outline { font-size: 12px; padding: 6px 14px; border-radius: var(--rad-md); border: 0.5px solid var(--border2); background: transparent; cursor: pointer; color: var(--text2); font-family: inherit; transition: all 0.15s; }
+  .btn-outline:hover { background: var(--surface2); color: var(--text); }
+  .btn-primary { font-size: 12px; padding: 6px 14px; border-radius: var(--rad-md); border: none; background: var(--teal-dark); cursor: pointer; color: var(--teal-light); font-family: inherit; font-weight: 500; }
+  .btn-primary:hover { background: var(--teal); }
+
+  /* Add form */
+  .form-label { display:block; font-size:11px; color:var(--text2); margin-bottom:5px; font-weight:500; }
+  .form-input { width:100%; font-size:13px; padding:7px 11px; border-radius:var(--rad-md); border:0.5px solid var(--border2); background:var(--surface2); color:var(--text); font-family:inherit; outline:none; transition:border-color 0.15s; }
+  .form-input:focus { border-color:var(--teal); }
+  .skill-slider-row { display:grid; grid-template-columns:80px 1fr 36px; align-items:center; gap:10px; margin-bottom:10px; }
+  .skill-slider-name { font-size:11px; color:var(--text2); text-align:right; }
+  .skill-slider-val { font-size:12px; font-weight:600; color:var(--text); text-align:center; }
+  input[type=range] { width:100%; accent-color:var(--teal); cursor:pointer; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="brand">
+      <div class="logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M12 3C9 3 6.5 6 6.5 9c0 3 1.8 5.8 3.2 8 .6 1 1.2 1.8 2.3 2.2 1.1-.4 1.7-1.2 2.3-2.2 1.4-2.2 3.2-5 3.2-8C17.5 6 15 3 12 3z" fill="white" opacity="0.9"/>
+          <ellipse cx="12" cy="9.5" rx="2.2" ry="2.8" fill="#1D9E75"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <div class="title">星の森デンタル</div>
+        <div class="sub">歯科衛生士 スキルデータベース</div>
+      </div>
+    </div>
+    <div class="badge">業界唯一のスキルDB</div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">登録衛生士</div>
+      <div class="stat-value" id="s-total">6</div>
+      <div class="stat-sub">名在籍</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">平均スコア</div>
+      <div class="stat-value" id="s-avg">—</div>
+      <div class="stat-sub">/ 100点</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">トップ評価</div>
+      <div class="stat-value" id="s-top">—</div>
+      <div class="stat-sub" id="s-top-name">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">評価スキル</div>
+      <div class="stat-value">8</div>
+      <div class="stat-sub">分野</div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-f="all">全員</button>
+      <button class="tab" data-f="シニア">シニア</button>
+      <button class="tab" data-f="ミドル">ミドル</button>
+      <button class="tab" data-f="ジュニア">ジュニア</button>
+    </div>
+    <input class="search" type="text" id="srch" placeholder="衛生士名を検索...">
+  </div>
+
+  <!-- Grid -->
+  <div class="grid" id="grid"></div>
+
+  <!-- Detail -->
+  <div id="detail" style="display:none;"></div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <span class="footer-note">最終評価日: 2025年3月 ／ 評価者: 星の森デンタル 院長</span>
+    <div class="footer-actions">
+      <button class="btn-outline" onclick="window.print()">印刷 / PDF保存</button>
+      <button class="btn-primary" onclick="openAddModal()">＋ 衛生士を追加</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Add Hygienist Modal -->
+<div id="add-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:100;overflow-y:auto;padding:2rem 1rem;">
+  <div id="add-modal-box" style="background:var(--surface);border-radius:var(--rad-xl);max-width:540px;margin:0 auto;padding:1.75rem;position:relative;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
+      <div>
+        <div style="font-size:16px;font-weight:600;color:var(--text);">新規衛生士を登録</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:3px;">スキルスコアを入力してデータベースに追加します</div>
+      </div>
+      <button onclick="closeAddModal()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text2);line-height:1;padding:4px 8px;">×</button>
+    </div>
+
+    <!-- Basic info -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.25rem;">
+      <div style="grid-column:1/-1;">
+        <label class="form-label">氏名 <span style="color:#E24B4A;">*</span></label>
+        <input id="f-name" class="form-input" type="text" placeholder="例：田中 美咲">
+      </div>
+      <div>
+        <label class="form-label">レベル</label>
+        <select id="f-level" class="form-input">
+          <option value="シニア">シニア</option>
+          <option value="ミドル" selected>ミドル</option>
+          <option value="ジュニア">ジュニア</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">経験年数</label>
+        <input id="f-years" class="form-input" type="number" min="0" max="30" value="3" placeholder="年">
+      </div>
+      <div style="grid-column:1/-1;">
+        <label class="form-label">院長コメント</label>
+        <textarea id="f-comment" class="form-input" rows="2" placeholder="評価コメントを入力..." style="resize:vertical;"></textarea>
+      </div>
+    </div>
+
+    <!-- Skill scores -->
+    <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;padding-bottom:8px;border-bottom:0.5px solid var(--border);">スキルスコア（0〜100）</div>
+    <div id="skill-sliders"></div>
+
+    <div id="form-error" style="display:none;font-size:12px;color:#E24B4A;margin-bottom:10px;padding:8px 12px;background:rgba(226,75,74,0.08);border-radius:var(--rad-md);"></div>
+
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem;">
+      <button onclick="closeAddModal()" class="btn-outline">キャンセル</button>
+      <button onclick="submitAdd()" class="btn-primary" style="padding:8px 20px;">登録する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SK = ['予防処置','歯周処置','患者対応','器具操作','感染管理','カウンセリング','X線撮影','チームワーク'];
+
+const DATA = [
+  {id:1, name:'田中 美咲', ini:'田美', lv:'シニア', yr:8,
+   sc:[95,92,88,96,93,85,90,94],
+   cmt:'スケーリング・ルートプレーニングのスキルが非常に高く、患者への説明も的確。新人指導にも積極的に関わり、チーム全体のレベルアップに貢献している。担当患者のリピート率95%を誇るトッププレイヤー。'},
+  {id:2, name:'山本 花子', ini:'山花', lv:'シニア', yr:6,
+   sc:[88,90,92,85,91,87,88,86],
+   cmt:'患者コミュニケーション力が突出しており、リピート率向上に大きく貢献。感染管理への意識が高く、院内研修のリーダーを担当。TBIの質が安定しており、患者満足度アンケートでも常に高評価。'},
+  {id:3, name:'佐藤 由美', ini:'佐由', lv:'ミドル', yr:4,
+   sc:[80,78,82,76,84,80,75,83],
+   cmt:'歯周処置への向上心が高く、自主的な勉強に取り組む姿勢が評価される。器具操作の精度向上が今後の課題だが、患者からの信頼は厚く指名も増加傾向にある。'},
+  {id:4, name:'鈴木 さくら', ini:'鈴さ', lv:'ミドル', yr:3,
+   sc:[75,72,79,73,77,81,70,78],
+   cmt:'カウンセリング力が高く、初診患者への対応に定評がある。X線撮影の技術習得を優先課題として取り組み中。接遇スキルは全スタッフ中トップクラスで院の雰囲気づくりに大きく貢献。'},
+  {id:5, name:'伊藤 麻衣', ini:'伊麻', lv:'ジュニア', yr:2,
+   sc:[68,65,72,70,74,66,60,71],
+   cmt:'患者対応は丁寧で好評。基礎的な予防処置スキルをさらに積み上げる段階。向上心があり定期的な自己研鑽を続けており、継続的な成長が期待される。'},
+  {id:6, name:'渡辺 奈々', ini:'渡奈', lv:'ジュニア', yr:1,
+   sc:[60,58,65,62,68,60,55,63],
+   cmt:'入職1年目ながら積極的に学ぶ姿勢が際立つ。感染管理の理解は良好で手順の習得も早い。器具操作とX線撮影の経験値を積むことが最優先課題。今後の成長に期待大。'}
+];
+
+const avg = sc => Math.round(sc.reduce((a,b)=>a+b,0)/sc.length);
+const allAvg = Math.round(DATA.reduce((s,h)=>s+avg(h.sc),0)/DATA.length);
+const topH = DATA.reduce((a,b)=>avg(a.sc)>avg(b.sc)?a:b);
+document.getElementById('s-avg').textContent = allAvg;
+document.getElementById('s-top').textContent = avg(topH.sc);
+document.getElementById('s-top-name').textContent = topH.name;
+
+function miniSVG(sc) {
+  const cx=38, cy=38, r=30, n=sc.length;
+  const step=(Math.PI*2)/n, sa=-Math.PI/2;
+  let rings='', axes='';
+  for(let ring=1;ring<=4;ring++){
+    const rr=r*(ring/4), pts=[];
+    for(let i=0;i<n;i++){const a=sa+i*step;pts.push(`${cx+Math.cos(a)*rr},${cy+Math.sin(a)*rr}`);}
+    rings+=`<polygon points="${pts.join(' ')}" fill="none" stroke="#9FE1CB" stroke-width="0.6" opacity="0.8"/>`;
+  }
+  for(let i=0;i<n;i++){const a=sa+i*step;axes+=`<line x1="${cx}" y1="${cy}" x2="${cx+Math.cos(a)*r}" y2="${cy+Math.sin(a)*r}" stroke="#9FE1CB" stroke-width="0.6" opacity="0.5"/>`;}
+  const pts=sc.map((v,i)=>{const a=sa+i*step,d=(v/100)*r;return `${cx+Math.cos(a)*d},${cy+Math.sin(a)*d}`;});
+  const dots=pts.map(p=>`<circle cx="${p.split(',')[0]}" cy="${p.split(',')[1]}" r="2" fill="#1D9E75"/>`).join('');
+  return `<svg viewBox="0 0 76 76" xmlns="http://www.w3.org/2000/svg">${rings}${axes}<polygon points="${pts.join(' ')}" fill="#1D9E75" fill-opacity="0.25" stroke="#1D9E75" stroke-width="1.5"/>${dots}</svg>`;
+}
+
+function buildRadarSVG(h) {
+  const cx=150, cy=150, R=100, n=SK.length;
+  const step=(Math.PI*2)/n, sa=-Math.PI/2;
+  const isDark=matchMedia('(prefers-color-scheme: dark)').matches;
+  const teamAvg=SK.map((_,i)=>Math.round(DATA.reduce((s,d)=>s+d.sc[i],0)/DATA.length));
+
+  // Color zone backgrounds
+  const zones=[
+    {pct:1.00,color:isDark?'rgba(29,158,117,0.08)':'rgba(29,158,117,0.07)'},
+    {pct:0.80,color:isDark?'rgba(186,117,23,0.10)':'rgba(186,117,23,0.08)'},
+    {pct:0.60,color:isDark?'rgba(226,75,74,0.10)':'rgba(226,75,74,0.07)'}
+  ];
+  let zoneSVG='';
+  zones.forEach(z=>{
+    const pts=[];
+    for(let i=0;i<n;i++){const a=sa+i*step,d=R*z.pct;pts.push(`${cx+Math.cos(a)*d},${cy+Math.sin(a)*d}`);}
+    zoneSVG+=`<polygon points="${pts.join(' ')}" fill="${z.color}" stroke="none"/>`;
+  });
+
+  // Grid rings
+  let rings='';
+  [0.25,0.5,0.75,1].forEach((p)=>{
+    const rr=R*p, pts=[];
+    for(let i=0;i<n;i++){const a=sa+i*step;pts.push(`${cx+Math.cos(a)*rr},${cy+Math.sin(a)*rr}`);}
+    const col=isDark?'rgba(255,255,255,0.08)':'rgba(0,0,0,0.08)';
+    rings+=`<polygon points="${pts.join(' ')}" fill="none" stroke="${col}" stroke-width="0.8"/>`;
+    // Ring label (score value)
+    const lx=cx+2, ly=cy-rr-3;
+    const lc=isDark?'#555':'#bbb';
+    rings+=`<text x="${lx}" y="${ly}" font-size="8" fill="${lc}" text-anchor="middle">${p*100}</text>`;
+  });
+
+  // Axis lines
+  let axes='';
+  for(let i=0;i<n;i++){
+    const a=sa+i*step, ac=isDark?'rgba(255,255,255,0.12)':'rgba(0,0,0,0.1)';
+    axes+=`<line x1="${cx}" y1="${cy}" x2="${cx+Math.cos(a)*R}" y2="${cy+Math.sin(a)*R}" stroke="${ac}" stroke-width="0.8"/>`;
+  }
+
+  // Team average polygon
+  const avgPts=teamAvg.map((v,i)=>{const a=sa+i*step,d=(v/100)*R;return `${cx+Math.cos(a)*d},${cy+Math.sin(a)*d}`;});
+  const avgPolygon=`<polygon points="${avgPts.join(' ')}" fill="none" stroke="${isDark?'rgba(200,200,180,0.35)':'rgba(120,120,100,0.3)'}" stroke-width="1.5" stroke-dasharray="4,3"/>`;
+
+  // Hygienist data polygon
+  const dataPts=h.sc.map((v,i)=>{const a=sa+i*step,d=(v/100)*R;return `${cx+Math.cos(a)*d},${cy+Math.sin(a)*d}`;});
+  const fillColor='rgba(29,158,117,0.22)';
+  const dataPolygon=`<polygon points="${dataPts.join(' ')}" fill="${fillColor}" stroke="#1D9E75" stroke-width="2"/>`;
+
+  // Data points with score labels
+  let dotsSVG='';
+  dataPts.forEach((p,i)=>{
+    const [px,py]=p.split(',').map(Number);
+    const score=h.sc[i];
+    const isHigh=score>=80, isMid=score>=65;
+    const dotColor=isHigh?'#1D9E75':isMid?'#BA7517':'#E24B4A';
+    // Score bubble
+    const bx=px, by=py;
+    dotsSVG+=`<circle cx="${bx}" cy="${by}" r="12" fill="${dotColor}" opacity="0.15"/>`;
+    dotsSVG+=`<circle cx="${bx}" cy="${by}" r="4" fill="${dotColor}"/>`;
+    dotsSVG+=`<text x="${bx}" y="${by-8}" font-size="9" font-weight="600" fill="${dotColor}" text-anchor="middle">${score}</text>`;
+  });
+
+  // Skill labels with smart positioning
+  let labelsSVG='';
+  const labelR=R+24;
+  for(let i=0;i<n;i++){
+    const a=sa+i*step;
+    const lx=cx+Math.cos(a)*labelR, ly=cy+Math.sin(a)*labelR;
+    const anchor=Math.cos(a)>0.1?'start':Math.cos(a)<-0.1?'end':'middle';
+    const tc=isDark?'#aaa':'#555';
+    labelsSVG+=`<text x="${lx}" y="${ly+4}" font-size="10" fill="${tc}" text-anchor="${anchor}" font-family="'Hiragino Kaku Gothic ProN','Hiragino Sans',sans-serif">${SK[i]}</text>`;
+  }
+
+  return `<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" width="100%" style="max-width:300px;display:block;margin:0 auto;">
+    ${zoneSVG}${rings}${axes}${avgPolygon}${dataPolygon}${dotsSVG}${labelsSVG}
+  </svg>`;
+}
+function lvClass(lv){return lv==='シニア'?'lv-s':lv==='ミドル'?'lv-m':'lv-j';}
+function barClass(v){return v>=80?'bar-hi':v>=65?'bar-mid':'bar-lo';}
+
+let selId=null, cFilter='all';
+
+function render(filter, search){
+  let items=DATA;
+  if(filter&&filter!=='all') items=items.filter(h=>h.lv===filter);
+  if(search) items=items.filter(h=>h.name.includes(search));
+  const grid=document.getElementById('grid');
+  if(!items.length){grid.innerHTML='<div class="empty">該当する衛生士が見つかりません</div>';return;}
+  grid.innerHTML=items.map(h=>{
+    const s=avg(h.sc);
+    return `<div class="card${h.id===selId?' sel':''}" data-id="${h.id}">
+      <div class="card-top">
+        <div class="av">${h.ini}</div>
+        <div>
+          <div class="c-name">${h.name}</div>
+          <div class="meta">
+            <span class="lv ${lvClass(h.lv)}">${h.lv}</span>
+            <span class="yr">経験 ${h.yr}年</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div>
+          <div class="sc-label">総合スコア</div>
+          <div><span class="sc-val">${s}</span><span class="sc-max"> / 100</span></div>
+        </div>
+        <div class="mini">${miniSVG(h.sc)}</div>
+      </div>
+    </div>`;
+  }).join('');
+  grid.querySelectorAll('.card').forEach(c=>{
+    c.addEventListener('click',()=>{
+      const id=parseInt(c.dataset.id);
+      if(selId===id){selId=null;closeDetail();}
+      else{selId=id;openDetail(id);}
+      render(cFilter, document.getElementById('srch').value);
+    });
+  });
+}
+
+function closeDetail(){
+  document.getElementById('detail').style.display='none';
+}
+
+function openDetail(id){
+  const h=DATA.find(x=>x.id===id); if(!h) return;
+  const d=document.getElementById('detail');
+  d.style.display='block';
+  const bars=SK.map((s,i)=>`
+    <div class="sk-row">
+      <div class="sk-name-row"><span>${s}</span><span class="sk-score">${h.sc[i]}</span></div>
+      <div class="bar-bg"><div class="bar-fill ${barClass(h.sc[i])}" style="width:${h.sc[i]}%"></div></div>
+    </div>`).join('');
+  d.innerHTML=`<div class="detail">
+    <div class="dh">
+      <div class="dh-left">
+        <div class="dh-av">${h.ini}</div>
+        <div>
+          <div class="dt">${h.name}</div>
+          <div class="dt-sub">${h.lv} ／ 経験${h.yr}年 ／ 総合スコア ${avg(h.sc)}点</div>
+        </div>
+      </div>
+      <button class="close-btn" id="dc">閉じる</button>
+    </div>
+    <div class="dgrid">
+      <div>
+        <div class="section-label">スキル評価スコア（8分野）</div>
+        ${bars}
+      </div>
+      <div>
+        <div class="section-label">スキルマップ</div>
+        <div class="radar-wrap" id="radar-container"></div>
+        <div class="radar-legend">
+          <div class="radar-legend-item"><div class="radar-legend-line" style="background:#1D9E75;"></div>本人スコア</div>
+          <div class="radar-legend-item"><div class="radar-legend-line" style="background:rgba(120,120,100,0.5);border-top:1px dashed rgba(120,120,100,0.7);"></div>チーム平均</div>
+        </div>
+      </div>
+    </div>
+    <div class="comment">
+      <div class="comment-label">院長評価コメント</div>
+      <div class="comment-text">${h.cmt}</div>
+    </div>
+  </div>`;
+  d.querySelector('#dc').addEventListener('click',()=>{
+    selId=null; closeDetail();
+    render(cFilter, document.getElementById('srch').value);
+  });
+  // SVG radar
+  document.getElementById('radar-container').innerHTML = buildRadarSVG(h);
+  d.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+document.getElementById('tabs').querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.getElementById('tabs').querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    cFilter=t.dataset.f; selId=null; closeDetail();
+    render(cFilter, document.getElementById('srch').value);
+  });
+});
+document.getElementById('srch').addEventListener('input',e=>render(cFilter, e.target.value.trim()));
+
+render('all','');
+
+// ── 衛生士追加モーダル ──────────────────────────────
+function openAddModal() {
+  // スキルスライダーを生成
+  const container = document.getElementById('skill-sliders');
+  container.innerHTML = SK.map((s, i) => `
+    <div class="skill-slider-row">
+      <div class="skill-slider-name">${s}</div>
+      <input type="range" min="0" max="100" value="70" step="1" id="sl-${i}"
+        oninput="document.getElementById('sv-${i}').textContent=this.value">
+      <div class="skill-slider-val" id="sv-${i}">70</div>
+    </div>`).join('');
+  // フォームリセット
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-level').value = 'ミドル';
+  document.getElementById('f-years').value = '3';
+  document.getElementById('f-comment').value = '';
+  document.getElementById('form-error').style.display = 'none';
+  document.getElementById('add-modal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeAddModal() {
+  document.getElementById('add-modal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function submitAdd() {
+  const name = document.getElementById('f-name').value.trim();
+  const errEl = document.getElementById('form-error');
+  if (!name) {
+    errEl.textContent = '氏名を入力してください。';
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+
+  const level  = document.getElementById('f-level').value;
+  const years  = parseInt(document.getElementById('f-years').value) || 0;
+  const cmt    = document.getElementById('f-comment').value.trim() || '—';
+  const sc     = SK.map((_, i) => parseInt(document.getElementById(`sl-${i}`).value));
+  // イニシャル（姓の最初の1文字 + 名の最初の1文字）
+  const parts  = name.replace(/\s+/g, ' ').split(' ');
+  const ini    = parts.length >= 2 ? parts[0][0] + parts[1][0] : name.slice(0, 2);
+  const newId  = DATA.length ? Math.max(...DATA.map(d => d.id)) + 1 : 1;
+
+  DATA.push({ id: newId, name, ini, lv: level, yr: years, sc, cmt });
+  updateStats();
+  closeAddModal();
+  render(cFilter, document.getElementById('srch').value);
+}
+
+function updateStats() {
+  const total  = DATA.length;
+  const avg2   = Math.round(DATA.reduce((s, h) => s + avg(h.sc), 0) / total);
+  const bestH  = DATA.reduce((a, b) => avg(a.sc) > avg(b.sc) ? a : b);
+  document.getElementById('s-total').textContent = total;
+  document.getElementById('s-avg').textContent   = avg2;
+  document.getElementById('s-top').textContent   = avg(bestH.sc);
+  document.getElementById('s-top-name').textContent = bestH.name;
+}
+
+// モーダル外クリックで閉じる
+document.getElementById('add-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeAddModal();
+});
+</script>
+</body>
+</html>
