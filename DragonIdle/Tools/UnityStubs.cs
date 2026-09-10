@@ -141,8 +141,12 @@ namespace UnityEngine
 
     public static class Time
     {
-        public static float deltaTime { get { return 0; } }
-        public static float time { get { return 0; } }
+        static float _delta;
+        static float _time;
+        public static float deltaTime { get { return _delta; } }
+        public static float time { get { return _time; } }
+        /// <summary>スタブ専用。Unity には無いので、Assets 側から呼んではいけない。</summary>
+        public static void __Advance(float dt) { _delta = dt; _time += dt; }
     }
 
     public static class Random
