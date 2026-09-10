@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -270,33 +269,10 @@ namespace DragonIdle
 
         void SpawnFloatingGold(double amount)
         {
-            Text text = UIFactory.Label("Floating", _floatLayer, "+" + NumberFormat.Gold(amount), 40,
-                UIStyle.Gold, TextAnchor.MiddleCenter, FontStyle.Bold);
-            RectTransform rect = UIFactory.Rect(text.gameObject);
-            rect.anchorMin = new Vector2(1f, 0f);
-            rect.anchorMax = new Vector2(1f, 0f);
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.sizeDelta = new Vector2(420, 60);
-            rect.anchoredPosition = new Vector2(-142 + Random.Range(-40f, 40f), 420);
-            StartCoroutine(FloatAndFade(rect, text));
-        }
-
-        IEnumerator FloatAndFade(RectTransform rect, Text text)
-        {
-            float duration = 0.9f;
-            float elapsed = 0f;
-            Vector2 start = rect.anchoredPosition;
-            Color color = text.color;
-            while (elapsed < duration)
-            {
-                elapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsed / duration);
-                rect.anchoredPosition = start + new Vector2(0, 150f * t);
-                color.a = 1f - t * t;
-                text.color = color;
-                yield return null;
-            }
-            Destroy(rect.gameObject);
+            // なでるボタンの真上あたりから立ち上げる
+            Vector2 origin = new Vector2(UIStyle.ReferenceResolution.x * 0.5f - 178f,
+                -UIStyle.ReferenceResolution.y * 0.5f + 470f);
+            FloatingText.Spawn(this, _floatLayer, origin, "+" + NumberFormat.Gold(amount), UIStyle.Gold);
         }
 
         void ShowToast(string message)

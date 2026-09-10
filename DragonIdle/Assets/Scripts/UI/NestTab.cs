@@ -28,6 +28,7 @@ namespace DragonIdle
         const float CardHeight = 220f;
 
         Transform _listContent;
+        NestScene _scene;
         Button _hatchButton;
         Text _hatchLabel;
         Text _hatchHint;
@@ -39,6 +40,8 @@ namespace DragonIdle
         {
             Root = UIFactory.Node("NestTab", parent);
 
+            BuildScene();
+
             // 孵化パネル
             Image hatchPanel = UIFactory.Panel("HatchPanel", Root.transform, UIStyle.BgPanel2, UIStyle.Round16);
             RectTransform hatchRect = UIFactory.Rect(hatchPanel.gameObject);
@@ -48,7 +51,7 @@ namespace DragonIdle
             hatchRect.offsetMin = new Vector2(24, 0);
             hatchRect.offsetMax = new Vector2(-24, 0);
             hatchRect.sizeDelta = new Vector2(hatchRect.sizeDelta.x, 196);
-            hatchRect.anchoredPosition = new Vector2(0, -24);
+            hatchRect.anchoredPosition = new Vector2(0, -SceneBottom - 16f);
 
             Text title = UIFactory.Label("Title", hatchPanel.transform, "たまごを孵す", 36, UIStyle.Text,
                 TextAnchor.UpperLeft, FontStyle.Bold);
@@ -82,12 +85,62 @@ namespace DragonIdle
             _listContent = UIFactory.ScrollList("DragonList", Root.transform, 18,
                 new RectOffset(24, 24, 8, 300), out scrollRect);
             RectTransform listRect = UIFactory.Rect(scrollRect.gameObject);
-            UIFactory.Stretch(listRect, 0, 0, 0, 236);
+            UIFactory.Stretch(listRect, 0, 0, 0, SceneBottom + 16f + 196f + 16f);
 
             BuildCards();
         }
 
-        public override void Rebuild() { BuildCards(); }
+        const float SceneTop = 20f;
+        const float SceneHeight = 432f;
+        const float SceneBottom = SceneTop + SceneHeight;
+
+        /// <summary>巣の情景。育てているドラゴンが実際に並んで見える場所。</summary>
+        void BuildScene()
+        {
+            // 角丸にすると中の床やドラゴンが角からはみ出すので、下地は四角のまま扱う。
+            Image frame = UIFactory.Panel("NestScene", Root.transform, Color.white, UIStyle.CaveGradient);
+            frame.type = Image.Type.Simple;
+            RectTransform frameRect = UIFactory.Rect(frame.gameObject);
+            frameRect.anchorMin = new Vector2(0f, 1f);
+            frameRect.anchorMax = new Vector2(1f, 1f);
+            frameRect.pivot = new Vector2(0.5f, 1f);
+            frameRect.offsetMin = new Vector2(24, 0);
+            frameRect.offsetMax = new Vector2(-24, 0);
+            frameRect.sizeDelta = new Vector2(frameRect.sizeDelta.x, SceneHeight);
+            frameRect.anchoredPosition = new Vector2(0, -SceneTop);
+
+            Image floor = UIFactory.Panel("Floor", frame.transform, new Color32(0x3A, 0x30, 0x52, 0xFF));
+            floor.raycastTarget = false;
+            RectTransform floorRect = UIFactory.Rect(floor.gameObject);
+            floorRect.anchorMin = new Vector2(0f, 0f);
+            floorRect.anchorMax = new Vector2(1f, 0f);
+            floorRect.pivot = new Vector2(0.5f, 0f);
+            floorRect.offsetMin = new Vector2(0, 0);
+            floorRect.offsetMax = new Vector2(0, 0);
+            floorRect.sizeDelta = new Vector2(floorRect.sizeDelta.x, 96);
+            floorRect.anchoredPosition = Vector2.zero;
+
+            Text hint = UIFactory.Label("Hint", frame.transform, "ドラゴンをなでるとゴールドがもらえる",
+                24, new Color(1f, 1f, 1f, 0.55f), TextAnchor.LowerCenter);
+            RectTransform hintRect = UIFactory.Rect(hint.gameObject);
+            hintRect.anchorMin = new Vector2(0f, 0f);
+            hintRect.anchorMax = new Vector2(1f, 0f);
+            hintRect.pivot = new Vector2(0.5f, 0f);
+            hintRect.offsetMin = new Vector2(16, 0);
+            hintRect.offsetMax = new Vector2(-16, 0);
+            hintRect.sizeDelta = new Vector2(hintRect.sizeDelta.x, 36);
+            hintRect.anchoredPosition = new Vector2(0, 16);
+
+            _scene = frame.gameObject.AddComponent<NestScene>();
+            _scene.Attach(hint);
+            _scene.Rebuild();
+        }
+
+        public override void Rebuild()
+        {
+            if (_scene != null) _scene.Rebuild();
+            BuildCards();
+        }
 
         void BuildCards()
         {

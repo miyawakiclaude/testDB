@@ -157,6 +157,35 @@ namespace DragonIdle
             }
         }
 
+        static Sprite _caveGradient;
+
+        /// <summary>巣の情景に敷く縦グラデーション。上ほど暗く、下の床に向かって明るむ。</summary>
+        public static Sprite CaveGradient
+        {
+            get
+            {
+                if (_caveGradient == null)
+                {
+                    const int height = 128;
+                    Texture2D tex = NewTexture(4, height);
+                    Color top = new Color32(0x0C, 0x0A, 0x14, 0xFF);
+                    Color bottom = new Color32(0x2A, 0x22, 0x3E, 0xFF);
+                    Color32[] pixels = new Color32[4 * height];
+                    for (int y = 0; y < height; y++)
+                    {
+                        float t = y / (height - 1f);
+                        Color color = Color.Lerp(top, bottom, Mathf.Pow(t, 1.6f));
+                        for (int x = 0; x < 4; x++) pixels[y * 4 + x] = color;
+                    }
+                    tex.SetPixels32(pixels);
+                    tex.Apply();
+                    _caveGradient = Sprite.Create(tex, new Rect(0, 0, 4, height),
+                        new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect);
+                }
+                return _caveGradient;
+            }
+        }
+
         /// <summary>9スライス用の角丸矩形。どんな大きさに引き伸ばしても角の丸みが崩れない。</summary>
         static Sprite BuildRounded(int radius)
         {
