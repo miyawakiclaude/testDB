@@ -73,8 +73,8 @@ namespace DragonIdle
             new Achievement("rare_4", "神話に触れる", "神話のドラゴンを手に入れる", 0.12,
                 g => g.Data.bestRarity, (int)Rarity.Mythic),
 
-            new Achievement("level_1", "覚醒", "どれかをLv.25まで育てる", 0.03,
-                g => g.Data.bestLevel, 25),
+            new Achievement("level_1", "覚醒", "どれかをLv.30まで育てる", 0.03,
+                g => g.Data.bestLevel, 30),
             new Achievement("level_2", "熟練の育て手", "どれかをLv.50まで育てる", 0.05,
                 g => g.Data.bestLevel, 50),
             new Achievement("level_3", "竜と生きる", "どれかをLv.100まで育てる", 0.10,

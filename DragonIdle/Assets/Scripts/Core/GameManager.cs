@@ -32,7 +32,7 @@ namespace DragonIdle
 
         const int BaseNestCapacity = 3;
         const double BaseEggCost = 100.0;
-        const double EggCostGrowth = 1.55;
+        const double EggCostGrowth = 1.72;
         const double RebirthThreshold = 1000000.0;
 
         float _saveTimer;
@@ -247,8 +247,8 @@ namespace DragonIdle
         public double BaseProduction(DragonSave d)
         {
             DragonSpecies s = SpeciesDatabase.ById(d.speciesId);
-            double levelFactor = 1.0 + 0.15 * (d.level - 1);
-            double awakening = Math.Pow(2.0, d.level / 25); // 25レベルごとに覚醒して2倍
+            double levelFactor = 1.0 + 0.13 * (d.level - 1);
+            double awakening = Math.Pow(2.0, d.level / 30); // 30レベルごとに覚醒して2倍
             return s.BaseRate * Rarities.Multiplier((Rarity)d.rarity) * levelFactor * awakening * d.individual;
         }
 
@@ -273,7 +273,7 @@ namespace DragonIdle
         {
             DragonSpecies s = SpeciesDatabase.ById(d.speciesId);
             double cost = 12.0 * s.BaseRate * Rarities.Multiplier((Rarity)d.rarity)
-                          * Math.Pow(1.13, d.level - 1)
+                          * Math.Pow(1.155, d.level - 1)
                           * Math.Pow(0.97, UpgradeLevel(UpgradeId.Training));
             return Math.Max(1.0, Math.Floor(cost));
         }
@@ -292,7 +292,7 @@ namespace DragonIdle
             Data.gold -= cost;
             d.level++;
             if (d.level > Data.bestLevel) Data.bestLevel = d.level;
-            if (d.level % 25 == 0)
+            if (d.level % 30 == 0)
             {
                 Toast(SpeciesDatabase.ById(d.speciesId).Name + " が覚醒した！ 生産量が2倍");
             }
@@ -587,6 +587,16 @@ namespace DragonIdle
             return SpeciesDatabase.Find(species.Element, species.Tier + 1);
         }
 
+        /// <summary>
+        /// 進化で上がるレアリティ。神話だけは孵化でしか出ないので、進化はレジェンドで止まる。
+        /// </summary>
+        public int EvolvedRarity(DragonSave d)
+        {
+            DragonSave partner = FindEvolutionPartner(d);
+            int best = partner == null ? d.rarity : Mathf.Max(d.rarity, partner.rarity);
+            return Mathf.Min(best + 1, (int)Rarity.Legendary);
+        }
+
         public bool CanEvolve(DragonSave d)
         {
             if (IsAway(d)) return false;
@@ -597,7 +607,7 @@ namespace DragonIdle
         {
             DragonSpecies next = EvolutionTarget(d);
             if (next == null) return 0;
-            return Math.Floor(180.0 * next.BaseRate * Rarities.Multiplier((Rarity)d.rarity));
+            return Math.Floor(1200.0 * next.BaseRate * Rarities.Multiplier((Rarity)EvolvedRarity(d)));
         }
 
         /// <summary>
@@ -620,7 +630,7 @@ namespace DragonIdle
             string before = SpeciesDatabase.ById(d.speciesId).Name;
             Data.gold -= cost;
 
-            int rarity = Mathf.Min(Mathf.Max(d.rarity, partner.rarity) + 1, Rarities.Count - 1);
+            int rarity = EvolvedRarity(d);
             int level = Mathf.Max(d.level, partner.level);
             float individual = Mathf.Min(Mathf.Max(d.individual, partner.individual) + 0.05f, 1.35f);
 
@@ -692,7 +702,7 @@ namespace DragonIdle
             get
             {
                 if (Data.lifetimeGold < RebirthThreshold) return 0;
-                int total = (int)Math.Floor(Math.Pow(Data.lifetimeGold / RebirthThreshold, 0.45));
+                int total = (int)Math.Floor(Math.Pow(Data.lifetimeGold / RebirthThreshold, 0.40));
                 return Math.Max(0, total);
             }
         }
@@ -711,7 +721,7 @@ namespace DragonIdle
             get
             {
                 int target = Math.Max(Data.souls + 1, SoulsIfRebirthNow + 1);
-                return RebirthThreshold * Math.Pow(target, 1.0 / 0.45);
+                return RebirthThreshold * Math.Pow(target, 1.0 / 0.40);
             }
         }
 

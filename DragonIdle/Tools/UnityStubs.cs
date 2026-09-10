@@ -36,7 +36,7 @@ namespace UnityEngine
         public static Vector2 one { get { return new Vector2(1, 1); } }
         public float magnitude { get { return (float)Math.Sqrt(x * x + y * y); } }
         public static float Dot(Vector2 a, Vector2 b) { return a.x * b.x + a.y * b.y; }
-        public static Vector2 Lerp(Vector2 a, Vector2 b, float t) { return a; }
+        public static Vector2 Lerp(Vector2 a, Vector2 b, float t) { return new Vector2(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t); }
         public static Vector2 operator +(Vector2 a, Vector2 b) { return new Vector2(a.x + b.x, a.y + b.y); }
         public static Vector2 operator -(Vector2 a, Vector2 b) { return new Vector2(a.x - b.x, a.y - b.y); }
         public static Vector2 operator *(Vector2 a, float b) { return new Vector2(a.x * b, a.y * b); }
@@ -93,7 +93,7 @@ namespace UnityEngine
         public static Color white { get { return new Color(1, 1, 1, 1); } }
         public static Color black { get { return new Color(0, 0, 0, 1); } }
         public static Color clear { get { return new Color(0, 0, 0, 0); } }
-        public static Color Lerp(Color a, Color b, float t) { return a; }
+        public static Color Lerp(Color a, Color b, float t) { return new Color(a.r + (b.r - a.r) * t, a.g + (b.g - a.g) * t, a.b + (b.b - a.b) * t, a.a + (b.a - a.a) * t); }
         public static Color operator *(Color a, float b) { return a; }
         public static bool operator ==(Color a, Color b) { return a.r == b.r; }
         public static bool operator !=(Color a, Color b) { return !(a == b); }
@@ -118,25 +118,25 @@ namespace UnityEngine
     {
         public const float PI = 3.14159265f;
         public const float Deg2Rad = 0.0174532924f;
-        public static float Clamp01(float v) { return v; }
-        public static float Clamp(float v, float a, float b) { return v; }
-        public static int Clamp(int v, int a, int b) { return v; }
-        public static float Min(float a, float b) { return a; }
-        public static int Min(int a, int b) { return a; }
-        public static float Max(float a, float b) { return a; }
-        public static int Max(int a, int b) { return a; }
-        public static float Lerp(float a, float b, float t) { return a; }
-        public static float InverseLerp(float a, float b, float v) { return 0; }
-        public static float Pow(float a, float b) { return 0; }
-        public static float Sqrt(float a) { return 0; }
-        public static float Sin(float a) { return 0; }
-        public static float Cos(float a) { return 0; }
-        public static float Abs(float a) { return 0; }
-        public static float Exp(float a) { return 0; }
-        public static float Atan2(float y, float x) { return 0; }
-        public static int RoundToInt(float a) { return 0; }
-        public static int CeilToInt(float a) { return 0; }
-        public static int FloorToInt(float a) { return 0; }
+        public static float Clamp01(float v) { return v < 0f ? 0f : (v > 1f ? 1f : v); }
+        public static float Clamp(float v, float a, float b) { return v < a ? a : (v > b ? b : v); }
+        public static int Clamp(int v, int a, int b) { return v < a ? a : (v > b ? b : v); }
+        public static float Min(float a, float b) { return a < b ? a : b; }
+        public static int Min(int a, int b) { return a < b ? a : b; }
+        public static float Max(float a, float b) { return a > b ? a : b; }
+        public static int Max(int a, int b) { return a > b ? a : b; }
+        public static float Lerp(float a, float b, float t) { return a + (b - a) * Clamp01(t); }
+        public static float InverseLerp(float a, float b, float v) { return a == b ? 0f : Clamp01((v - a) / (b - a)); }
+        public static float Pow(float a, float b) { return (float)Math.Pow(a, b); }
+        public static float Sqrt(float a) { return (float)Math.Sqrt(a); }
+        public static float Sin(float a) { return (float)Math.Sin(a); }
+        public static float Cos(float a) { return (float)Math.Cos(a); }
+        public static float Atan2(float y, float x) { return (float)Math.Atan2(y, x); }
+        public static float Abs(float a) { return Math.Abs(a); }
+        public static float Exp(float a) { return (float)Math.Exp(a); }
+        public static int RoundToInt(float a) { return (int)Math.Round(a); }
+        public static int CeilToInt(float a) { return (int)Math.Ceiling(a); }
+        public static int FloorToInt(float a) { return (int)Math.Floor(a); }
     }
 
     public static class Time
@@ -263,12 +263,22 @@ namespace UnityEngine
 
     public static class PlayerPrefs
     {
-        public static string GetString(string key, string def) { return def; }
-        public static void SetString(string key, string value) { }
-        public static int GetInt(string key, int def) { return def; }
-        public static void SetInt(string key, int value) { }
+        static readonly Dictionary<string, string> Strings = new Dictionary<string, string>();
+        static readonly Dictionary<string, int> Ints = new Dictionary<string, int>();
+        public static string GetString(string key, string def)
+        {
+            string value;
+            return Strings.TryGetValue(key, out value) ? value : def;
+        }
+        public static void SetString(string key, string value) { Strings[key] = value; }
+        public static int GetInt(string key, int def)
+        {
+            int value;
+            return Ints.TryGetValue(key, out value) ? value : def;
+        }
+        public static void SetInt(string key, int value) { Ints[key] = value; }
         public static void Save() { }
-        public static void DeleteKey(string key) { }
+        public static void DeleteKey(string key) { Strings.Remove(key); Ints.Remove(key); }
     }
 
     public static class JsonUtility
