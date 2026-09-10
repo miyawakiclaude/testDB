@@ -143,7 +143,7 @@ namespace DragonIdle
                 Element element = (Element)e;
                 for (int tier = 1; tier <= 5; tier++)
                 {
-                    DragonSpecies species = Find(element, tier);
+                    DragonSpecies species = SpeciesDatabase.Find(element, tier);
                     CodexRow row = _speciesRows[index++];
                     if (species == null) { row.Label.text = ""; row.Portrait.enabled = false; continue; }
 
@@ -165,14 +165,5 @@ namespace DragonIdle
             }
         }
 
-        static DragonSpecies Find(Element element, int tier)
-        {
-            IReadOnlyList<DragonSpecies> all = SpeciesDatabase.Species;
-            for (int i = 0; i < all.Count; i++)
-            {
-                if (all[i].Element == element && all[i].Tier == tier) return all[i];
-            }
-            return null;
-        }
     }
 }

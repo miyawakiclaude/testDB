@@ -163,6 +163,21 @@ namespace DragonIdle
             get { return TreasuryMultiplier * SoulMultiplier * SynergyMultiplier * _achievementMultiplier; }
         }
 
+        /// <summary>図鑑に載っている中で最も高いティア。称号の判定に使う。</summary>
+        public int HighestDiscoveredTier
+        {
+            get
+            {
+                int best = 0;
+                for (int i = 0; i < Data.discovered.Count; i++)
+                {
+                    int tier = SpeciesDatabase.ById(Data.discovered[i]).Tier;
+                    if (tier > best) best = tier;
+                }
+                return best;
+            }
+        }
+
         public int MaxedUpgradeCount
         {
             get
@@ -366,6 +381,79 @@ namespace DragonIdle
             Data.gold += refund;
             StructureVersion++;
             Toast(SpeciesDatabase.ById(d.speciesId).Name + " を空へ還した（" + NumberFormat.Gold(refund) + " ゴールド）");
+            return true;
+        }
+
+        // ---------- 進化 ----------
+
+        /// <summary>同じ種族のもう1匹。進化はこの相手を取り込む形で行う。</summary>
+        public DragonSave FindEvolutionPartner(DragonSave d)
+        {
+            DragonSpecies species = SpeciesDatabase.ById(d.speciesId);
+            if (species.Tier >= 5) return null;
+            for (int i = 0; i < Data.dragons.Count; i++)
+            {
+                DragonSave other = Data.dragons[i];
+                if (!ReferenceEquals(other, d) && other.speciesId == d.speciesId) return other;
+            }
+            return null;
+        }
+
+        public DragonSpecies EvolutionTarget(DragonSave d)
+        {
+            DragonSpecies species = SpeciesDatabase.ById(d.speciesId);
+            if (species.Tier >= 5) return null;
+            return SpeciesDatabase.Find(species.Element, species.Tier + 1);
+        }
+
+        public bool CanEvolve(DragonSave d)
+        {
+            return FindEvolutionPartner(d) != null && EvolutionTarget(d) != null;
+        }
+
+        public double EvolveCost(DragonSave d)
+        {
+            DragonSpecies next = EvolutionTarget(d);
+            if (next == null) return 0;
+            return Math.Floor(180.0 * next.BaseRate * Rarities.Multiplier((Rarity)d.rarity));
+        }
+
+        /// <summary>
+        /// 同じ種族を2匹あわせて、同属性のひとつ上の種族にする。
+        /// レアリティも1段上がり、レベルと個体値は良いほうを引き継ぐ。
+        /// </summary>
+        public bool Evolve(DragonSave d)
+        {
+            DragonSave partner = FindEvolutionPartner(d);
+            DragonSpecies next = EvolutionTarget(d);
+            if (partner == null || next == null) return false;
+
+            double cost = EvolveCost(d);
+            if (Data.gold < cost)
+            {
+                Toast("進化にはゴールドが足りない");
+                return false;
+            }
+
+            string before = SpeciesDatabase.ById(d.speciesId).Name;
+            Data.gold -= cost;
+
+            int rarity = Mathf.Min(Mathf.Max(d.rarity, partner.rarity) + 1, Rarities.Count - 1);
+            int level = Mathf.Max(d.level, partner.level);
+            float individual = Mathf.Min(Mathf.Max(d.individual, partner.individual) + 0.05f, 1.35f);
+
+            Data.dragons.Remove(partner);
+            d.speciesId = next.Id;
+            d.rarity = rarity;
+            d.level = level;
+            d.individual = individual;
+
+            if (rarity > Data.bestRarity) Data.bestRarity = rarity;
+            if (!Data.discovered.Contains(next.Id)) Data.discovered.Add(next.Id);
+            Data.evolutions++;
+
+            StructureVersion++;
+            Toast(before + " が " + next.Name + " に進化した（" + Rarities.Name((Rarity)rarity) + "）");
             return true;
         }
 

@@ -87,6 +87,13 @@ namespace DragonIdle
             new Achievement("codex_3", "図鑑完成", "35種すべてを図鑑に載せる", 0.15,
                 g => g.Data.discovered.Count, SpeciesDatabase.TotalCount),
 
+            new Achievement("evolve_1", "かたちを変える", "はじめて進化させる", 0.03,
+                g => g.Data.evolutions, 1),
+            new Achievement("evolve_2", "系譜をつなぐ", "10回進化させる", 0.06,
+                g => g.Data.evolutions, 10),
+            new Achievement("tier_5", "頂点を知る", "ティア5の種族を図鑑に載せる", 0.10,
+                g => g.HighestDiscoveredTier, 5),
+
             new Achievement("synergy", "七属の巣", "7属性を同時に巣にそろえる", 0.08,
                 g => g.DistinctElements, 7),
 

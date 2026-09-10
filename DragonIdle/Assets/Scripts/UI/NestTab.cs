@@ -18,7 +18,11 @@ namespace DragonIdle
             public Button LevelUpButton;
             public Button BulkButton;
             public Text BulkLabel;
+            public Button EvolveButton;
+            public Text EvolveLabel;
             public Button ReleaseButton;
+            public Text ReleaseLabel;
+            public Text Hint;
         }
 
         const float CardHeight = 220f;
@@ -144,7 +148,7 @@ namespace DragonIdle
 
             card.Production = UIFactory.Label("Production", root.transform, "", 29, UIStyle.Gold,
                 TextAnchor.UpperLeft, FontStyle.Bold);
-            Place(card.Production.gameObject, 200, -124, 500, 40);
+            Place(card.Production.gameObject, 200, -122, 460, 40);
 
             card.LevelUpButton = UIFactory.Button("LevelUp", root.transform, "", 27, UIStyle.BgPanel3, UIStyle.Text);
             RectTransform levelRect = UIFactory.Rect(card.LevelUpButton.gameObject);
@@ -157,26 +161,35 @@ namespace DragonIdle
             DragonSave captured = data;
             card.LevelUpButton.onClick.AddListener(delegate { Game.LevelUp(captured); });
 
-            card.BulkButton = UIFactory.Button("LevelUp10", root.transform, "×10", 25, UIStyle.BgPanel3, UIStyle.TextDim);
-            RectTransform bulkRect = UIFactory.Rect(card.BulkButton.gameObject);
-            bulkRect.anchorMin = new Vector2(1f, 1f);
-            bulkRect.anchorMax = new Vector2(1f, 1f);
-            bulkRect.pivot = new Vector2(1f, 1f);
-            bulkRect.sizeDelta = new Vector2(138, 74);
-            bulkRect.anchoredPosition = new Vector2(-24, -128);
+            card.BulkButton = SmallButton(root.transform, "LevelUp10", "×10", -24, UIStyle.TextDim);
             card.BulkLabel = card.BulkButton.GetComponentInChildren<Text>();
             card.BulkButton.onClick.AddListener(delegate { Game.LevelUpMany(captured, 10); });
 
-            card.ReleaseButton = UIFactory.Button("Release", root.transform, "見送る", 25, UIStyle.BgPanel3, UIStyle.Danger);
-            RectTransform releaseRect = UIFactory.Rect(card.ReleaseButton.gameObject);
-            releaseRect.anchorMin = new Vector2(1f, 1f);
-            releaseRect.anchorMax = new Vector2(1f, 1f);
-            releaseRect.pivot = new Vector2(1f, 1f);
-            releaseRect.sizeDelta = new Vector2(138, 74);
-            releaseRect.anchoredPosition = new Vector2(-174, -128);
+            card.EvolveButton = SmallButton(root.transform, "Evolve", "進化", -132, UIStyle.Soul);
+            card.EvolveLabel = card.EvolveButton.GetComponentInChildren<Text>();
+            card.EvolveButton.onClick.AddListener(delegate { Game.Evolve(captured); });
+
+            card.ReleaseButton = SmallButton(root.transform, "Release", "放つ", -240, UIStyle.Danger);
+            card.ReleaseLabel = card.ReleaseButton.GetComponentInChildren<Text>();
             card.ReleaseButton.onClick.AddListener(delegate { Game.Release(captured); });
 
+            card.Hint = UIFactory.Label("Hint", root.transform, "", 22, UIStyle.Soul, TextAnchor.UpperLeft);
+            Place(card.Hint.gameObject, 200, -166, 460, 34);
+
             return card;
+        }
+
+        /// <summary>カード右下に並ぶ小さなボタン。3つが等間隔で収まる幅にしてある。</summary>
+        static Button SmallButton(Transform parent, string name, string caption, float x, Color foreground)
+        {
+            Button button = UIFactory.Button(name, parent, caption, 24, UIStyle.BgPanel3, foreground);
+            RectTransform rect = UIFactory.Rect(button.gameObject);
+            rect.anchorMin = new Vector2(1f, 1f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.pivot = new Vector2(1f, 1f);
+            rect.sizeDelta = new Vector2(100, 74);
+            rect.anchoredPosition = new Vector2(x, -128);
+            return button;
         }
 
         static void Place(GameObject go, float x, float y, float width, float height)
@@ -226,7 +239,32 @@ namespace DragonIdle
             card.LevelUpLabel.color = canAfford ? UIStyle.Gold : UIStyle.TextFaint;
             card.BulkLabel.color = canAfford ? UIStyle.TextDim : UIStyle.TextFaint;
             card.BulkButton.interactable = canAfford;
-            card.ReleaseButton.interactable = Game.Data.dragons.Count > 1;
+
+            bool releasable = Game.Data.dragons.Count > 1;
+            card.ReleaseButton.interactable = releasable;
+            card.ReleaseLabel.color = releasable ? UIStyle.Danger : UIStyle.TextFaint;
+
+            DragonSpecies next = Game.EvolutionTarget(data);
+            bool canEvolve = Game.CanEvolve(data);
+            double evolveCost = canEvolve ? Game.EvolveCost(data) : 0;
+            bool affordEvolve = canEvolve && Game.Data.gold >= evolveCost;
+
+            card.EvolveButton.interactable = affordEvolve;
+            card.EvolveLabel.color = affordEvolve ? UIStyle.Soul : UIStyle.TextFaint;
+
+            if (canEvolve)
+            {
+                card.Hint.text = "進化 → " + next.Name + "　" + NumberFormat.Gold(evolveCost);
+                card.Hint.color = affordEvolve ? UIStyle.Soul : UIStyle.TextFaint;
+            }
+            else if (next == null)
+            {
+                card.Hint.text = "<color=#6E668C>この系譜の頂点</color>";
+            }
+            else
+            {
+                card.Hint.text = "<color=#6E668C>同じ種族がもう1匹いれば " + next.Name + " へ進化</color>";
+            }
         }
     }
 }

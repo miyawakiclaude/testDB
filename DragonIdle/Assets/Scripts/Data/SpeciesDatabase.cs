@@ -102,6 +102,16 @@ namespace DragonIdle
             return _byId.TryGetValue(id, out s) ? s : All[0];
         }
 
+        /// <summary>属性とティアから1種を引く。進化先を求めるのに使う。</summary>
+        public static DragonSpecies Find(Element element, int tier)
+        {
+            for (int i = 0; i < All.Count; i++)
+            {
+                if (All[i].Element == element && All[i].Tier == tier) return All[i];
+            }
+            return null;
+        }
+
         /// <summary>指定ティア範囲の種族を集める。孵化の抽選で使う。</summary>
         public static List<DragonSpecies> InTierRange(int minTier, int maxTier)
         {
