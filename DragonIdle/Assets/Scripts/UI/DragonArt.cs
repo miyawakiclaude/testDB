@@ -162,15 +162,17 @@ namespace DragonIdle
             float eyeRadius = 0.029f * headScale * scale;
             float bodyCenterY = bcy * scale + offset.y;
 
+            // 影は黒ではなく洞窟の暗がりへ落とす。淡い属性でも濁らず、巣の背景ともなじむ。
+            Color shadow = new Color(0.078f, 0.063f, 0.141f);
             Color elementColor = Elements.Tint(species.Element);
             Color bodyTop = Color.Lerp(elementColor, Color.white, 0.16f);
-            Color bodyBottom = Color.Lerp(elementColor, Color.black, 0.42f);
+            Color bodyBottom = Color.Lerp(elementColor, shadow, 0.50f);
             Color bellyColor = Color.Lerp(elementColor, new Color(1f, 0.97f, 0.88f), 0.60f);
-            Color wingColor = Color.Lerp(elementColor, Color.black, 0.55f);
-            Color wingInner = Color.Lerp(elementColor, Color.black, 0.30f);
+            Color wingColor = Color.Lerp(elementColor, shadow, 0.62f);
+            Color wingInner = Color.Lerp(elementColor, shadow, 0.34f);
             Color boneColor = Color.Lerp(elementColor, new Color(1f, 0.96f, 0.86f), 0.72f);
-            Color spikeColor = Color.Lerp(elementColor, Color.black, 0.30f);
-            Color outline = Color.Lerp(elementColor, Color.black, 0.80f);
+            Color spikeColor = Color.Lerp(elementColor, shadow, 0.34f);
+            Color outline = Color.Lerp(elementColor, shadow, 0.86f);
 
             Color32[] pixels = new Color32[Size * Size];
 

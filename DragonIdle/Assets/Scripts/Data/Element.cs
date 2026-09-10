@@ -41,7 +41,7 @@ namespace DragonIdle
                 case Element.Wind: return new Color32(0x5F, 0xD9, 0xA8, 0xFF);
                 case Element.Earth: return new Color32(0xC7, 0x9A, 0x5B, 0xFF);
                 case Element.Thunder: return new Color32(0xF5, 0xD2, 0x3F, 0xFF);
-                case Element.Light: return new Color32(0xFF, 0xE9, 0xA3, 0xFF);
+                case Element.Light: return new Color32(0xDE, 0xF0, 0xFF, 0xFF);   // 白銀。雷や土の黄土と混ざらないように
                 default: return new Color32(0x9B, 0x6B, 0xFF, 0xFF);
             }
         }
