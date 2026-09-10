@@ -32,6 +32,15 @@ namespace DragonIdle
         static UnityEngine.Font _mainFont;
 
         /// <summary>
+        /// 日本語を出せるフォントが見つかったか。見つからないまま組み込みフォントに落ちた場合、
+        /// 日本語はすべて豆腐になるので、画面にその旨を出して原因をわかるようにする。
+        /// </summary>
+        public static bool JapaneseFontFound { get; private set; }
+
+        /// <summary>実際に使っているフォント名。見つからなければ空。</summary>
+        public static string ResolvedFontName { get; private set; }
+
+        /// <summary>
         /// 日本語が出せる OS フォントを探す。見つからなければ組み込みフォントに落とす
         /// （その場合、日本語は豆腐になるので README の手順でフォントを入れる）。
         /// </summary>
@@ -59,9 +68,20 @@ namespace DragonIdle
                 if (match != null)
                 {
                     _mainFont = UnityEngine.Font.CreateDynamicFontFromOSFont(match, 40);
-                    if (_mainFont != null) return _mainFont;
+                    if (_mainFont != null)
+                    {
+                        JapaneseFontFound = true;
+                        ResolvedFontName = match;
+                        return _mainFont;
+                    }
                 }
 
+                JapaneseFontFound = false;
+                ResolvedFontName = "";
+                Debug.LogWarning(
+                    "日本語を出せるフォントが見つかりませんでした。文字が豆腐になります。" +
+                    "Assets/Fonts/ の手順に従って日本語フォントを入れ、UIStyle.MainFont が" +
+                    "それを返すようにしてください。");
                 _mainFont = BuiltinFallback();
                 if (_mainFont == null) _mainFont = UnityEngine.Font.CreateDynamicFontFromOSFont("Arial", 40);
                 return _mainFont;

@@ -76,6 +76,7 @@ namespace DragonIdle
             BuildHeader(columnGo.transform);
             BuildContentArea(columnGo.transform);
             BuildTabBar(columnGo.transform);
+            BuildFontWarning(root);
 
             BuildFloatingLayer(root);
         }
@@ -188,6 +189,30 @@ namespace DragonIdle
             }
 
             SelectTab(0);
+        }
+
+        /// <summary>
+        /// 日本語フォントが無い環境では文字が読めないので、英字でだけ理由を出す。
+        /// 見つかっているときは何も作らない。
+        /// </summary>
+        void BuildFontWarning(Transform root)
+        {
+            if (UIStyle.JapaneseFontFound) return;
+
+            Image bar = UIFactory.Panel("FontWarning", root, new Color32(0x7A, 0x2E, 0x2E, 0xFF));
+            RectTransform rect = UIFactory.Rect(bar.gameObject);
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.offsetMin = new Vector2(0, 0);
+            rect.offsetMax = new Vector2(0, 0);
+            rect.sizeDelta = new Vector2(rect.sizeDelta.x, 64);
+            rect.anchoredPosition = Vector2.zero;
+
+            Text label = UIFactory.Label("Label", bar.transform,
+                "No Japanese font on this device - see Assets/Fonts/README", 24,
+                new Color(1f, 0.9f, 0.9f, 1f), TextAnchor.MiddleCenter);
+            UIFactory.Stretch(UIFactory.Rect(label.gameObject), 16, 0, 16, 0);
         }
 
         void BuildFloatingLayer(Transform root)
