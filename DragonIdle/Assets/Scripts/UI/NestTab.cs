@@ -118,29 +118,33 @@ namespace DragonIdle
             stripeRect.sizeDelta = new Vector2(16, -24);
             stripeRect.anchoredPosition = new Vector2(10, 0);
 
-            // 属性の玉
-            Image orb = UIFactory.Panel("Orb", root.transform, elementColor, UIStyle.Circle);
-            orb.type = Image.Type.Simple;
-            RectTransform orbRect = UIFactory.Rect(orb.gameObject);
-            orbRect.anchorMin = new Vector2(0f, 1f);
-            orbRect.anchorMax = new Vector2(0f, 1f);
-            orbRect.pivot = new Vector2(0f, 1f);
-            orbRect.sizeDelta = new Vector2(96, 96);
-            orbRect.anchoredPosition = new Vector2(38, -26);
-            Text orbText = UIFactory.Label("Element", orb.transform, Elements.Name(species.Element), 44,
-                new Color(0.07f, 0.06f, 0.11f, 1f), TextAnchor.MiddleCenter, FontStyle.Bold);
-            UIFactory.Stretch(UIFactory.Rect(orbText.gameObject));
+            // 肖像: 種族ごとの姿を実行時に描いたもの
+            Color plateColor = elementColor;
+            plateColor.a = 0.14f;
+            Image plate = UIFactory.Panel("Plate", root.transform, plateColor, UIStyle.Round16);
+            RectTransform plateRect = UIFactory.Rect(plate.gameObject);
+            plateRect.anchorMin = new Vector2(0f, 1f);
+            plateRect.anchorMax = new Vector2(0f, 1f);
+            plateRect.pivot = new Vector2(0f, 1f);
+            plateRect.sizeDelta = new Vector2(148, 148);
+            plateRect.anchoredPosition = new Vector2(36, -22);
+
+            Image portrait = UIFactory.Panel("Portrait", plate.transform, Color.white, null);
+            portrait.sprite = DragonArt.For(species);
+            portrait.type = Image.Type.Simple;
+            portrait.preserveAspect = true;
+            UIFactory.Stretch(UIFactory.Rect(portrait.gameObject), 6, 6, 6, 6);
 
             card.Name = UIFactory.Label("Name", root.transform, species.Name, 34, UIStyle.Text,
                 TextAnchor.UpperLeft, FontStyle.Bold);
-            Place(card.Name.gameObject, 156, -26, 460, 44);
+            Place(card.Name.gameObject, 200, -28, 500, 44);
 
             card.Meta = UIFactory.Label("Meta", root.transform, "", 25, UIStyle.TextDim, TextAnchor.UpperLeft);
-            Place(card.Meta.gameObject, 156, -74, 460, 36);
+            Place(card.Meta.gameObject, 200, -76, 500, 36);
 
             card.Production = UIFactory.Label("Production", root.transform, "", 29, UIStyle.Gold,
                 TextAnchor.UpperLeft, FontStyle.Bold);
-            Place(card.Production.gameObject, 38, -140, 560, 40);
+            Place(card.Production.gameObject, 200, -124, 500, 40);
 
             card.LevelUpButton = UIFactory.Button("LevelUp", root.transform, "", 27, UIStyle.BgPanel3, UIStyle.Text);
             RectTransform levelRect = UIFactory.Rect(card.LevelUpButton.gameObject);
@@ -210,8 +214,8 @@ namespace DragonIdle
             Color rarityColor = Rarities.Tint(rarity);
 
             card.Meta.text = "<color=#" + ColorUtility.ToHtmlStringRGB(rarityColor) + ">"
-                           + Rarities.Name(rarity) + "</color>　Lv." + data.level
-                           + "　個体 " + data.individual.ToString("0.00");
+                           + Rarities.Name(rarity) + "</color>　" + Elements.Name(species.Element)
+                           + "　Lv." + data.level + "　個体 " + data.individual.ToString("0.00");
 
             card.Production.text = NumberFormat.Rate(Game.Production(data)) + " ゴールド/秒";
 

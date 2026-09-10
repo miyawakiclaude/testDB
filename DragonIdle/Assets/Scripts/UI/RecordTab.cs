@@ -7,8 +7,15 @@ namespace DragonIdle
     /// <summary>記録のタブ。これまでの歩みと、出会った種族の図鑑。</summary>
     public class RecordTab : TabView
     {
+        /// <summary>図鑑の1行。未発見のときは肖像を隠す。</summary>
+        class CodexRow
+        {
+            public Image Portrait;
+            public Text Label;
+        }
+
         readonly List<Text> _statValues = new List<Text>();
-        readonly List<Text> _speciesRows = new List<Text>();
+        readonly List<CodexRow> _speciesRows = new List<CodexRow>();
         Text _discoveryHeader;
 
         public override string Title { get { return "記録"; } }
@@ -41,7 +48,7 @@ namespace DragonIdle
             {
                 Element element = (Element)e;
                 Image card = UIFactory.Panel("Element_" + element, content, UIStyle.BgPanel2, UIStyle.Round16);
-                UIFactory.Sizing(card.gameObject, 292, -1, -1, 292);
+                UIFactory.Sizing(card.gameObject, 412, -1, -1, 412);
                 UIFactory.VerticalLayout(card.gameObject, 8, new RectOffset(28, 28, 22, 22));
 
                 Text header = UIFactory.Label("Header", card.transform, Elements.Name(element) + " の系譜", 28,
@@ -50,16 +57,41 @@ namespace DragonIdle
 
                 for (int tier = 1; tier <= 5; tier++)
                 {
-                    Text row = UIFactory.Label("Tier" + tier, card.transform, "", 24, UIStyle.TextFaint,
-                        TextAnchor.MiddleLeft);
-                    UIFactory.Sizing(row.gameObject, 32);
-                    _speciesRows.Add(row);
+                    _speciesRows.Add(BuildCodexRow(card.transform, tier, element));
                 }
             }
 
             Button reset = UIFactory.Button("Reset", content, "最初からやり直す", 27, UIStyle.BgPanel, UIStyle.Danger);
             UIFactory.Sizing(reset.gameObject, 100, -1, -1, 100);
             reset.onClick.AddListener(OnResetClicked);
+        }
+
+        CodexRow BuildCodexRow(Transform parent, int tier, Element element)
+        {
+            CodexRow row = new CodexRow();
+
+            GameObject node = UIFactory.Node("Tier" + tier, parent);
+            UIFactory.Sizing(node, 56, -1, -1, 56);
+
+            Color plateColor = Elements.Tint(element);
+            plateColor.a = 0.12f;
+            Image plate = UIFactory.Panel("Plate", node.transform, plateColor, UIStyle.Round8);
+            RectTransform plateRect = UIFactory.Rect(plate.gameObject);
+            plateRect.anchorMin = new Vector2(0f, 0.5f);
+            plateRect.anchorMax = new Vector2(0f, 0.5f);
+            plateRect.pivot = new Vector2(0f, 0.5f);
+            plateRect.sizeDelta = new Vector2(52, 52);
+            plateRect.anchoredPosition = new Vector2(0, 0);
+
+            row.Portrait = UIFactory.Panel("Portrait", plate.transform, Color.white, null);
+            row.Portrait.preserveAspect = true;
+            UIFactory.Stretch(UIFactory.Rect(row.Portrait.gameObject), 2, 2, 2, 2);
+
+            row.Label = UIFactory.Label("Label", node.transform, "", 24, UIStyle.TextFaint, TextAnchor.MiddleLeft);
+            RectTransform labelRect = UIFactory.Stretch(UIFactory.Rect(row.Label.gameObject), 66, 0, 0, 0);
+            labelRect.anchorMin = new Vector2(0f, 0f);
+            labelRect.anchorMax = new Vector2(1f, 1f);
+            return row;
         }
 
         Text BuildStatRow(Transform parent, string label)
@@ -112,19 +144,22 @@ namespace DragonIdle
                 for (int tier = 1; tier <= 5; tier++)
                 {
                     DragonSpecies species = Find(element, tier);
-                    Text row = _speciesRows[index++];
-                    if (species == null) { row.text = ""; continue; }
+                    CodexRow row = _speciesRows[index++];
+                    if (species == null) { row.Label.text = ""; row.Portrait.enabled = false; continue; }
 
                     if (data.discovered.Contains(species.Id))
                     {
-                        row.text = "★" + tier + "　" + species.Name
-                                 + "　<color=#6E668C><size=21>" + species.Flavor + "</size></color>";
-                        row.color = UIStyle.Text;
+                        if (row.Portrait.sprite == null) row.Portrait.sprite = DragonArt.For(species);
+                        row.Portrait.enabled = true;
+                        row.Label.text = "★" + tier + "　" + species.Name
+                                       + "\n<color=#6E668C><size=20>" + species.Flavor + "</size></color>";
+                        row.Label.color = UIStyle.Text;
                     }
                     else
                     {
-                        row.text = "☆" + tier + "　??????";
-                        row.color = UIStyle.TextFaint;
+                        row.Portrait.enabled = false;
+                        row.Label.text = "☆" + tier + "　??????";
+                        row.Label.color = UIStyle.TextFaint;
                     }
                 }
             }
