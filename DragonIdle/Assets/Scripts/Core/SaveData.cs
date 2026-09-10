@@ -6,6 +6,7 @@ namespace DragonIdle
     [Serializable]
     public class DragonSave
     {
+        public int uid;              // 探索から個体を指すための番号
         public string speciesId;
         public int rarity;
         public int level = 1;
@@ -13,9 +14,19 @@ namespace DragonIdle
     }
 
     /// <summary>JsonUtility でそのまま保存できる形。ここにある値だけが引き継がれる。</summary>
+    /// <summary>探索の枠1つぶん。行き先は枠ごとに固定で、誰を送るかだけ選ぶ。</summary>
+    [Serializable]
+    public class ExpeditionSave
+    {
+        public int dragonUid;        // 0 なら空き
+        public long startUnix;
+    }
+
     [Serializable]
     public class SaveData
     {
+        public const int ExpeditionSlots = 4;   // 行き先の数と同じ
+
         public int version = 1;
 
         public double gold;
@@ -27,6 +38,8 @@ namespace DragonIdle
         public int eggsAllTime;      // 全期間の孵化数。記録タブ用
         public int pets;
         public int evolutions;
+        public int expeditionsDone;
+        public int nextUid = 1;
         public int bestRarity;       // これまでに手に入れた最高レアリティ
         public int bestLevel = 1;    // これまでに到達した最高レベル
         public double playSeconds;
@@ -36,6 +49,7 @@ namespace DragonIdle
         public List<int> upgradeLevels = new List<int>();
         public List<string> discovered = new List<string>();
         public List<string> achievements = new List<string>();
+        public List<ExpeditionSave> expeditions = new List<ExpeditionSave>();
 
         public void EnsureShape()
         {
@@ -44,6 +58,16 @@ namespace DragonIdle
             if (discovered == null) discovered = new List<string>();
             if (achievements == null) achievements = new List<string>();
             while (upgradeLevels.Count < UpgradeDatabase.Count) upgradeLevels.Add(0);
+
+            if (expeditions == null) expeditions = new List<ExpeditionSave>();
+            while (expeditions.Count < ExpeditionSlots) expeditions.Add(new ExpeditionSave());
+
+            // 古いセーブにも番号を振る。0 は「未割り当て」の意味で使っている。
+            if (nextUid < 1) nextUid = 1;
+            for (int i = 0; i < dragons.Count; i++)
+            {
+                if (dragons[i].uid == 0) dragons[i].uid = nextUid++;
+            }
         }
     }
 }

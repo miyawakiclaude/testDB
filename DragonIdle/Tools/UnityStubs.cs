@@ -188,6 +188,9 @@ namespace UnityEngine
         public Vector3 localScale { get; set; }
         public Quaternion localRotation { get; set; }
         public void SetParent(Transform parent, bool worldPositionStays) { }
+        public int childCount { get { return 0; } }
+        public Transform GetChild(int index) { return null; }
+        public void SetSiblingIndex(int index) { }
         public void SetAsLastSibling() { }
         public void SetAsFirstSibling() { }
     }

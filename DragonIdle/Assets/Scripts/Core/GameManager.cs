@@ -65,6 +65,7 @@ namespace DragonIdle
             data.gold = 60;
             data.lastSaveUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             DragonSave starter = new DragonSave();
+            starter.uid = data.nextUid++;
             starter.speciesId = "fire1";
             starter.rarity = (int)Rarity.Common;
             starter.level = 1;
@@ -148,6 +149,7 @@ namespace DragonIdle
                 int count = 0;
                 for (int i = 0; i < Data.dragons.Count; i++)
                 {
+                    if (IsAway(Data.dragons[i])) continue;
                     int e = (int)SpeciesDatabase.ById(Data.dragons[i].speciesId).Element;
                     if (!seen[e]) { seen[e] = true; count++; }
                 }
@@ -258,7 +260,11 @@ namespace DragonIdle
             get
             {
                 double sum = 0;
-                for (int i = 0; i < Data.dragons.Count; i++) sum += BaseProduction(Data.dragons[i]);
+                for (int i = 0; i < Data.dragons.Count; i++)
+                {
+                    if (IsAway(Data.dragons[i])) continue;
+                    sum += BaseProduction(Data.dragons[i]);
+                }
                 return sum * GlobalMultiplier;
             }
         }
@@ -364,6 +370,7 @@ namespace DragonIdle
             DragonSpecies species = pool[_rng.Next(pool.Count)];
 
             DragonSave d = new DragonSave();
+            d.uid = Data.nextUid++;
             d.speciesId = species.Id;
             d.rarity = (int)rarity;
             d.level = 1;
@@ -383,6 +390,11 @@ namespace DragonIdle
         /// <summary>巣を空けるために見送る。育てたぶんは少しだけ戻る。</summary>
         public bool Release(DragonSave d)
         {
+            if (IsAway(d))
+            {
+                Toast("探索から帰るまで待とう");
+                return false;
+            }
             if (Data.dragons.Count <= 1)
             {
                 Toast("最後の1匹は見送れない");
@@ -396,6 +408,162 @@ namespace DragonIdle
             return true;
         }
 
+        // ---------- 探索 ----------
+
+        public ExpeditionSave Slot(int index)
+        {
+            if (index < 0 || index >= Data.expeditions.Count) return null;
+            return Data.expeditions[index];
+        }
+
+        public bool IsAway(DragonSave d)
+        {
+            if (d == null || d.uid == 0) return false;
+            for (int i = 0; i < Data.expeditions.Count; i++)
+            {
+                if (Data.expeditions[i].dragonUid == d.uid) return true;
+            }
+            return false;
+        }
+
+        public DragonSave DragonByUid(int uid)
+        {
+            if (uid == 0) return null;
+            for (int i = 0; i < Data.dragons.Count; i++)
+            {
+                if (Data.dragons[i].uid == uid) return Data.dragons[i];
+            }
+            return null;
+        }
+
+        public DragonSave DragonOnExpedition(int slot)
+        {
+            ExpeditionSave save = Slot(slot);
+            return save == null ? null : DragonByUid(save.dragonUid);
+        }
+
+        /// <summary>出発してからの割合。1 になれば帰り着いている。</summary>
+        public double ExpeditionProgress(int slot)
+        {
+            ExpeditionSave save = Slot(slot);
+            if (save == null || save.dragonUid == 0) return 0;
+            double elapsed = DateTimeOffset.UtcNow.ToUnixTimeSeconds() - save.startUnix;
+            return Math.Min(1.0, Math.Max(0.0, elapsed / ExpeditionDatabase.Get(slot).Seconds));
+        }
+
+        public double ExpeditionRemainingSeconds(int slot)
+        {
+            ExpeditionSave save = Slot(slot);
+            if (save == null || save.dragonUid == 0) return 0;
+            double elapsed = DateTimeOffset.UtcNow.ToUnixTimeSeconds() - save.startUnix;
+            return Math.Max(0.0, ExpeditionDatabase.Get(slot).Seconds - elapsed);
+        }
+
+        /// <summary>いま呼び戻したときに受け取れるゴールド。最後まで待てば満額になる。</summary>
+        public double ExpeditionReward(int slot)
+        {
+            DragonSave d = DragonOnExpedition(slot);
+            if (d == null) return 0;
+            ExpeditionDef def = ExpeditionDatabase.Get(slot);
+            return Math.Floor(BaseProduction(d) * GlobalMultiplier * def.Seconds
+                              * def.Multiplier * ExpeditionProgress(slot));
+        }
+
+        /// <summary>出発前に見せる、最後まで待った場合の実入り。</summary>
+        public double ExpeditionFullReward(int slot, DragonSave d)
+        {
+            if (d == null) return 0;
+            ExpeditionDef def = ExpeditionDatabase.Get(slot);
+            return Math.Floor(BaseProduction(d) * GlobalMultiplier * def.Seconds * def.Multiplier);
+        }
+
+        public bool Dispatch(int slot, DragonSave d)
+        {
+            ExpeditionSave save = Slot(slot);
+            if (save == null || d == null) return false;
+            if (save.dragonUid != 0) return false;
+            if (IsAway(d)) return false;
+
+            save.dragonUid = d.uid;
+            save.startUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            StructureVersion++;
+            Sfx.Play(SfxId.Buy);
+            Toast(SpeciesDatabase.ById(d.speciesId).Name + " が " + ExpeditionDatabase.Get(slot).Name + " へ発った");
+            SaveSystem.Save(Data);
+            return true;
+        }
+
+        /// <summary>帰還または呼び戻し。途中なら進んだぶんだけ受け取る。</summary>
+        public bool Collect(int slot)
+        {
+            ExpeditionSave save = Slot(slot);
+            DragonSave d = DragonOnExpedition(slot);
+            if (save == null || save.dragonUid == 0) return false;
+
+            double progress = ExpeditionProgress(slot);
+            double gold = ExpeditionReward(slot);
+            ExpeditionDef def = ExpeditionDatabase.Get(slot);
+            int levels = (int)(def.LevelGain * progress);
+
+            save.dragonUid = 0;
+            save.startUnix = 0;
+
+            Data.expeditionsDone++;
+            if (gold > 0) AddGold(gold);
+            if (d != null && levels > 0)
+            {
+                d.level += levels;
+                if (d.level > Data.bestLevel) Data.bestLevel = d.level;
+            }
+
+            StructureVersion++;
+            Sfx.Play(progress >= 1.0 ? SfxId.Hatch : SfxId.Buy);
+
+            string who = d == null ? "ドラゴン" : SpeciesDatabase.ById(d.speciesId).Name;
+            string levelPart = levels > 0 ? "　Lv +" + levels : "";
+            Toast(who + " が帰ってきた（" + NumberFormat.Gold(gold) + " ゴールド" + levelPart + "）");
+            SaveSystem.Save(Data);
+            return true;
+        }
+
+        /// <summary>いま送り出せるドラゴン。留守の子は除く。</summary>
+        public List<DragonSave> AvailableDragons()
+        {
+            List<DragonSave> list = new List<DragonSave>();
+            for (int i = 0; i < Data.dragons.Count; i++)
+            {
+                if (!IsAway(Data.dragons[i])) list.Add(Data.dragons[i]);
+            }
+            return list;
+        }
+
+        /// <summary>毎フレームの表示更新で使うので、リストを作らずに数だけ返す。</summary>
+        public int AvailableDragonCount
+        {
+            get
+            {
+                int count = 0;
+                for (int i = 0; i < Data.dragons.Count; i++)
+                {
+                    if (!IsAway(Data.dragons[i])) count++;
+                }
+                return count;
+            }
+        }
+
+        public int ExpeditionsFinished
+        {
+            get
+            {
+                int count = 0;
+                for (int i = 0; i < Data.expeditions.Count; i++)
+                {
+                    if (Data.expeditions[i].dragonUid != 0 && ExpeditionProgress(i) >= 1.0) count++;
+                }
+                return count;
+            }
+        }
+
         // ---------- 進化 ----------
 
         /// <summary>同じ種族のもう1匹。進化はこの相手を取り込む形で行う。</summary>
@@ -406,7 +574,8 @@ namespace DragonIdle
             for (int i = 0; i < Data.dragons.Count; i++)
             {
                 DragonSave other = Data.dragons[i];
-                if (!ReferenceEquals(other, d) && other.speciesId == d.speciesId) return other;
+                if (ReferenceEquals(other, d) || IsAway(other)) continue;
+                if (other.speciesId == d.speciesId) return other;
             }
             return null;
         }
@@ -420,6 +589,7 @@ namespace DragonIdle
 
         public bool CanEvolve(DragonSave d)
         {
+            if (IsAway(d)) return false;
             return FindEvolutionPartner(d) != null && EvolutionTarget(d) != null;
         }
 
@@ -557,8 +727,14 @@ namespace DragonIdle
             Data.eggsHatched = 0;
             Data.dragons.Clear();
             for (int i = 0; i < Data.upgradeLevels.Count; i++) Data.upgradeLevels[i] = 0;
+            for (int i = 0; i < Data.expeditions.Count; i++)
+            {
+                Data.expeditions[i].dragonUid = 0;
+                Data.expeditions[i].startUnix = 0;
+            }
 
             DragonSave starter = new DragonSave();
+            starter.uid = Data.nextUid++;
             starter.speciesId = "fire1";
             starter.rarity = (int)Rarity.Common;
             starter.level = 1;

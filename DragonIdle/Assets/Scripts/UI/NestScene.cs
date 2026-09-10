@@ -45,7 +45,8 @@ namespace DragonIdle
             _actors.Clear();
 
             if (Game == null) return;
-            List<DragonSave> dragons = Game.Data.dragons;
+            // 探索に出ている子は巣にいないので描かない
+            List<DragonSave> dragons = Game.AvailableDragons();
             int count = dragons.Count;
             if (count == 0) return;
 

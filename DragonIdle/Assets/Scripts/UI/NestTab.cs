@@ -278,22 +278,25 @@ namespace DragonIdle
             DragonSpecies species = SpeciesDatabase.ById(data.speciesId);
             Rarity rarity = (Rarity)data.rarity;
             Color rarityColor = Rarities.Tint(rarity);
+            bool away = Game.IsAway(data);
 
             card.Meta.text = "<color=#" + ColorUtility.ToHtmlStringRGB(rarityColor) + ">"
                            + Rarities.Name(rarity) + "</color>　" + Elements.Name(species.Element)
                            + "　Lv." + data.level + "　個体 " + data.individual.ToString("0.00");
 
-            card.Production.text = NumberFormat.Rate(Game.Production(data)) + " ゴールド/秒";
+            card.Production.text = away
+                ? "<color=#B388FF>探索中</color>　巣では稼いでいない"
+                : NumberFormat.Rate(Game.Production(data)) + " ゴールド/秒";
 
             double cost = Game.LevelUpCost(data);
-            bool canAfford = Game.Data.gold >= cost;
+            bool canAfford = Game.Data.gold >= cost && !away;
             card.LevelUpLabel.text = "育てる　" + NumberFormat.Gold(cost);
             card.LevelUpButton.interactable = canAfford;
             card.LevelUpLabel.color = canAfford ? UIStyle.Gold : UIStyle.TextFaint;
             card.BulkLabel.color = canAfford ? UIStyle.TextDim : UIStyle.TextFaint;
             card.BulkButton.interactable = canAfford;
 
-            bool releasable = Game.Data.dragons.Count > 1;
+            bool releasable = Game.Data.dragons.Count > 1 && !away;
             card.ReleaseButton.interactable = releasable;
             card.ReleaseLabel.color = releasable ? UIStyle.Danger : UIStyle.TextFaint;
 
@@ -305,7 +308,11 @@ namespace DragonIdle
             card.EvolveButton.interactable = affordEvolve;
             card.EvolveLabel.color = affordEvolve ? UIStyle.Soul : UIStyle.TextFaint;
 
-            if (canEvolve)
+            if (away)
+            {
+                card.Hint.text = "<color=#6E668C>帰ってくるまで育てられない</color>";
+            }
+            else if (canEvolve)
             {
                 card.Hint.text = "進化 → " + next.Name + "　" + NumberFormat.Gold(evolveCost);
                 card.Hint.color = affordEvolve ? UIStyle.Soul : UIStyle.TextFaint;

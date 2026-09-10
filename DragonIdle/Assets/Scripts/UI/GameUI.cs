@@ -138,6 +138,7 @@ namespace DragonIdle
             _contentArea = UIFactory.Rect(area);
 
             _tabs.Add(new NestTab());
+            _tabs.Add(new ExpeditionTab());
             _tabs.Add(new FacilityTab());
             _tabs.Add(new AchievementTab());
             _tabs.Add(new RebirthTab());
@@ -174,10 +175,10 @@ namespace DragonIdle
                 indicatorRect.anchorMin = new Vector2(0.5f, 1f);
                 indicatorRect.anchorMax = new Vector2(0.5f, 1f);
                 indicatorRect.pivot = new Vector2(0.5f, 1f);
-                indicatorRect.sizeDelta = new Vector2(72, 6);
+                indicatorRect.sizeDelta = new Vector2(64, 6);
                 indicatorRect.anchoredPosition = Vector2.zero;
 
-                Text label = UIFactory.Label("Label", cell.transform, _tabs[i].Title, 28,
+                Text label = UIFactory.Label("Label", cell.transform, _tabs[i].Title, 27,
                     UIStyle.TextFaint, TextAnchor.MiddleCenter, FontStyle.Bold);
                 UIFactory.Stretch(UIFactory.Rect(label.gameObject), 0, 0, 0, 10);
 
