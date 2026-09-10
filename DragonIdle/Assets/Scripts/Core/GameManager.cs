@@ -35,6 +35,9 @@ namespace DragonIdle
         const double RebirthThreshold = 1000000.0;
 
         float _saveTimer;
+        float _achievementTimer;
+        double _achievementMultiplier = 1.0;
+        readonly HashSet<string> _unlocked = new HashSet<string>();
         readonly System.Random _rng = new System.Random();
 
         void Awake()
@@ -50,6 +53,7 @@ namespace DragonIdle
             Data = SaveSystem.Load();
             if (Data == null) Data = CreateNewGame();
             Data.EnsureShape();
+            RebuildAchievementCache();
             ApplyOfflineProgress();
         }
 
@@ -96,6 +100,13 @@ namespace DragonIdle
             float dt = Time.deltaTime;
             Data.playSeconds += dt;
             AddGold(GoldPerSecond * dt);
+
+            _achievementTimer += dt;
+            if (_achievementTimer >= 0.5f)
+            {
+                _achievementTimer = 0f;
+                CheckAchievements();
+            }
 
             _saveTimer += dt;
             if (_saveTimer >= 15f)
@@ -145,9 +156,63 @@ namespace DragonIdle
 
         public double SynergyMultiplier { get { return 1.0 + 0.05 * DistinctElements; } }
 
+        public double AchievementMultiplier { get { return _achievementMultiplier; } }
+
         public double GlobalMultiplier
         {
-            get { return TreasuryMultiplier * SoulMultiplier * SynergyMultiplier; }
+            get { return TreasuryMultiplier * SoulMultiplier * SynergyMultiplier * _achievementMultiplier; }
+        }
+
+        public int MaxedUpgradeCount
+        {
+            get
+            {
+                int count = 0;
+                for (int i = 0; i < UpgradeDatabase.Count; i++)
+                {
+                    if (UpgradeMaxed((UpgradeId)i)) count++;
+                }
+                return count;
+            }
+        }
+
+        // ---------- 称号 ----------
+
+        public bool IsUnlocked(string achievementId) { return _unlocked.Contains(achievementId); }
+
+        public int UnlockedAchievementCount { get { return _unlocked.Count; } }
+
+        void RebuildAchievementCache()
+        {
+            _unlocked.Clear();
+            double bonus = 0;
+            for (int i = 0; i < AchievementDatabase.All.Count; i++)
+            {
+                Achievement achievement = AchievementDatabase.All[i];
+                if (!Data.achievements.Contains(achievement.Id)) continue;
+                _unlocked.Add(achievement.Id);
+                bonus += achievement.Bonus;
+            }
+            _achievementMultiplier = 1.0 + bonus;
+        }
+
+        /// <summary>条件を満たした称号を拾い上げる。0.5秒ごとに呼ばれる。</summary>
+        void CheckAchievements()
+        {
+            bool changed = false;
+            for (int i = 0; i < AchievementDatabase.All.Count; i++)
+            {
+                Achievement achievement = AchievementDatabase.All[i];
+                if (_unlocked.Contains(achievement.Id)) continue;
+                if (!achievement.IsMet(this)) continue;
+
+                Data.achievements.Add(achievement.Id);
+                _unlocked.Add(achievement.Id);
+                changed = true;
+                Toast("称号「" + achievement.Name + "」を得た（生産 "
+                      + NumberFormat.Percent(achievement.Bonus) + "）");
+            }
+            if (changed) RebuildAchievementCache();
         }
 
         public double OfflineCapHours { get { return 4.0 + UpgradeLevel(UpgradeId.Hourglass); } }
@@ -196,6 +261,7 @@ namespace DragonIdle
             if (Data.gold < cost) return false;
             Data.gold -= cost;
             d.level++;
+            if (d.level > Data.bestLevel) Data.bestLevel = d.level;
             if (d.level % 25 == 0)
             {
                 Toast(SpeciesDatabase.ById(d.speciesId).Name + " が覚醒した！ 生産量が2倍");
@@ -266,6 +332,7 @@ namespace DragonIdle
             Data.eggsAllTime++;
 
             Rarity rarity = RollRarity();
+            if ((int)rarity > Data.bestRarity) Data.bestRarity = (int)rarity;
             int minTier, maxTier;
             Rarities.TierRange(rarity, out minTier, out maxTier);
             List<DragonSpecies> pool = SpeciesDatabase.InTierRange(minTier, maxTier);
@@ -405,6 +472,7 @@ namespace DragonIdle
         {
             SaveSystem.Delete();
             Data = CreateNewGame();
+            RebuildAchievementCache();
             StructureVersion++;
             Toast("最初からやり直す");
         }

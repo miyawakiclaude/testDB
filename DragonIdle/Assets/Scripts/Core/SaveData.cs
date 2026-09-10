@@ -26,18 +26,22 @@ namespace DragonIdle
         public int eggsHatched;      // 今回の周回の孵化数。卵の値段はこれで上がる
         public int eggsAllTime;      // 全期間の孵化数。記録タブ用
         public int pets;
+        public int bestRarity;       // これまでに手に入れた最高レアリティ
+        public int bestLevel = 1;    // これまでに到達した最高レベル
         public double playSeconds;
         public long lastSaveUnix;
 
         public List<DragonSave> dragons = new List<DragonSave>();
         public List<int> upgradeLevels = new List<int>();
         public List<string> discovered = new List<string>();
+        public List<string> achievements = new List<string>();
 
         public void EnsureShape()
         {
             if (dragons == null) dragons = new List<DragonSave>();
             if (upgradeLevels == null) upgradeLevels = new List<int>();
             if (discovered == null) discovered = new List<string>();
+            if (achievements == null) achievements = new List<string>();
             while (upgradeLevels.Count < UpgradeDatabase.Count) upgradeLevels.Add(0);
         }
     }
