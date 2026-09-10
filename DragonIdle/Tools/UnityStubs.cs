@@ -133,6 +133,7 @@ namespace UnityEngine
         public static float Cos(float a) { return 0; }
         public static float Abs(float a) { return 0; }
         public static float Exp(float a) { return 0; }
+        public static float Atan2(float y, float x) { return 0; }
         public static int RoundToInt(float a) { return 0; }
         public static int CeilToInt(float a) { return 0; }
         public static int FloorToInt(float a) { return 0; }
@@ -187,6 +188,8 @@ namespace UnityEngine
         public Vector3 localScale { get; set; }
         public Quaternion localRotation { get; set; }
         public void SetParent(Transform parent, bool worldPositionStays) { }
+        public void SetAsLastSibling() { }
+        public void SetAsFirstSibling() { }
     }
 
     public class RectTransform : Transform
@@ -218,6 +221,7 @@ namespace UnityEngine
     public class MonoBehaviour : Behaviour
     {
         public Coroutine StartCoroutine(IEnumerator routine) { return null; }
+        public void StopCoroutine(Coroutine routine) { }
         public void StopAllCoroutines() { }
     }
 
@@ -361,6 +365,8 @@ namespace UnityEngine.UI
 
     public class Selectable : Behaviour
     {
+        public enum Transition { None, ColorTint, SpriteSwap, Animation }
+        public Transition transition { get; set; }
         public Graphic targetGraphic { get; set; }
         public bool interactable { get; set; }
         public ColorBlock colors { get; set; }

@@ -30,6 +30,7 @@ namespace DragonIdle
         Image _toastPanel;
         float _toastTimer;
 
+        HatchReveal _hatchReveal;
         GameObject _offlinePanel;
         Text _offlineBody;
 
@@ -40,6 +41,7 @@ namespace DragonIdle
         {
             _game = GameManager.Instance;
             _game.OnToast += ShowToast;
+            _game.OnHatched += ShowHatchReveal;
 
             Build();
 
@@ -51,7 +53,9 @@ namespace DragonIdle
 
         void OnDestroy()
         {
-            if (_game != null) _game.OnToast -= ShowToast;
+            if (_game == null) return;
+            _game.OnToast -= ShowToast;
+            _game.OnHatched -= ShowHatchReveal;
         }
 
         // ---------- 組み立て ----------
@@ -220,6 +224,9 @@ namespace DragonIdle
             _toastPanel.gameObject.SetActive(false);
 
             BuildOfflinePanel(layerGo.transform);
+
+            _hatchReveal = layerGo.AddComponent<HatchReveal>();
+            _hatchReveal.Build(layerGo.transform);
         }
 
         void BuildOfflinePanel(Transform parent)
@@ -300,6 +307,11 @@ namespace DragonIdle
             _toastText.text = message;
             _toastPanel.gameObject.SetActive(true);
             _toastTimer = 3.2f;
+        }
+
+        void ShowHatchReveal(DragonSave dragon, bool isNewSpecies)
+        {
+            _hatchReveal.Show(dragon, isNewSpecies);
         }
 
         void ShowOfflineReport(OfflineReport report)

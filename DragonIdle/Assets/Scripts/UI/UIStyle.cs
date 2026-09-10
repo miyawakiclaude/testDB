@@ -157,6 +157,105 @@ namespace DragonIdle
             }
         }
 
+        static Sprite _egg;
+        static Sprite _burst;
+
+        /// <summary>孵化演出に使う卵。上がやや細い実際の卵の形で、斑点を焼き込んである。</summary>
+        public static Sprite Egg
+        {
+            get
+            {
+                if (_egg != null) return _egg;
+
+                const int width = 128, height = 160;
+                Texture2D tex = NewTexture(width, height);
+                Color32[] pixels = new Color32[width * height];
+                System.Random rng = new System.Random(20260910);
+
+                // 斑点の位置を先に決めておく
+                const int speckCount = 26;
+                float[] sx = new float[speckCount], sy = new float[speckCount], sr = new float[speckCount];
+                for (int i = 0; i < speckCount; i++)
+                {
+                    sx[i] = (float)rng.NextDouble() * 2f - 1f;
+                    sy[i] = (float)rng.NextDouble() * 2f - 1f;
+                    sr[i] = 0.05f + (float)rng.NextDouble() * 0.06f;
+                }
+
+                for (int y = 0; y < height; y++)
+                {
+                    float v = (y + 0.5f) / height * 2f - 1f;
+                    for (int x = 0; x < width; x++)
+                    {
+                        float u = (x + 0.5f) / width * 2f - 1f;
+
+                        // 上へ行くほど細くなる楕円
+                        float halfWidth = Mathf.Sqrt(Mathf.Max(0f, 1f - v * v)) * (1f - 0.22f * v);
+                        float alpha = Mathf.Clamp01((halfWidth - Mathf.Abs(u)) * width * 0.5f);
+                        if (alpha <= 0f) { pixels[y * width + x] = new Color32(0, 0, 0, 0); continue; }
+
+                        // 左上からの当たり光
+                        float shade = Mathf.Clamp01(0.62f + 0.38f * (0.5f - u * 0.55f + v * 0.35f));
+                        Color color = Color.Lerp(new Color(0.80f, 0.75f, 0.66f), new Color(1f, 0.98f, 0.93f), shade);
+
+                        for (int i = 0; i < speckCount; i++)
+                        {
+                            float d = Mathf.Sqrt((u - sx[i]) * (u - sx[i]) + (v - sy[i]) * (v - sy[i]));
+                            if (d < sr[i]) color = Color.Lerp(color, new Color(0.62f, 0.55f, 0.47f), 0.55f);
+                        }
+
+                        color.a = alpha;
+                        pixels[y * width + x] = color;
+                    }
+                }
+
+                tex.SetPixels32(pixels);
+                tex.Apply();
+                _egg = Sprite.Create(tex, new Rect(0, 0, width, height), new Vector2(0.5f, 0.5f),
+                    100f, 0, SpriteMeshType.FullRect);
+                return _egg;
+            }
+        }
+
+        /// <summary>孵化の瞬間に背後で回る光芒。中心ほど濃く、外へ向かって消える。</summary>
+        public static Sprite Burst
+        {
+            get
+            {
+                if (_burst != null) return _burst;
+
+                const int size = 256;
+                const int rays = 16;
+                Texture2D tex = NewTexture(size, size);
+                Color32[] pixels = new Color32[size * size];
+                float center = size * 0.5f;
+
+                for (int y = 0; y < size; y++)
+                {
+                    for (int x = 0; x < size; x++)
+                    {
+                        float dx = x + 0.5f - center;
+                        float dy = y + 0.5f - center;
+                        float radius = Mathf.Sqrt(dx * dx + dy * dy) / center;
+                        if (radius > 1f) { pixels[y * size + x] = new Color32(0, 0, 0, 0); continue; }
+
+                        float angle = Mathf.Atan2(dy, dx);
+                        float wedge = Mathf.Sin(angle * rays) * 0.5f + 0.5f;
+                        float sharpness = Mathf.Pow(wedge, 2.2f);
+                        float falloff = Mathf.Clamp01(1f - radius) * Mathf.Clamp01(radius * 6f);
+                        float alpha = sharpness * falloff;
+                        pixels[y * size + x] = new Color32(255, 255, 255, (byte)(Mathf.Clamp01(alpha) * 255f));
+                    }
+                }
+
+                tex.SetPixels32(pixels);
+                tex.Apply();
+                _burst = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f),
+                    100f, 0, SpriteMeshType.FullRect);
+                return _burst;
+            }
+        }
+
         static Sprite _caveGradient;
 
         /// <summary>巣の情景に敷く縦グラデーション。上ほど暗く、下の床に向かって明るむ。</summary>

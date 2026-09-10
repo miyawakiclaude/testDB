@@ -28,6 +28,7 @@ namespace DragonIdle
         public OfflineReport PendingOffline;
 
         public event Action<string> OnToast;
+        public event Action<DragonSave, bool> OnHatched;   // bool は図鑑初登録かどうか
 
         const int BaseNestCapacity = 3;
         const double BaseEggCost = 100.0;
@@ -374,7 +375,8 @@ namespace DragonIdle
 
             StructureVersion++;
             Sfx.Play(SfxId.Hatch);
-            Toast((isNew ? "新種発見！ " : "") + Rarities.Name(rarity) + "の " + species.Name + " が生まれた");
+            if (OnHatched != null) OnHatched(d, isNew);
+            else Toast((isNew ? "新種発見！ " : "") + Rarities.Name(rarity) + "の " + species.Name + " が生まれた");
             return d;
         }
 
