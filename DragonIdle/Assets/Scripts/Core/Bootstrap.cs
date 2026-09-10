@@ -26,13 +26,23 @@ namespace DragonIdle
 
         static void EnsureCamera()
         {
-            if (Camera.main != null) return;
+            if (Camera.main != null)
+            {
+                // 既存のカメラに聞き手がなければ足す。無いと効果音が鳴らない。
+                if (Camera.main.GetComponent<AudioListener>() == null)
+                {
+                    Camera.main.gameObject.AddComponent<AudioListener>();
+                }
+                return;
+            }
+
             GameObject cameraGo = new GameObject("Main Camera");
             cameraGo.tag = "MainCamera";
             Camera camera = cameraGo.AddComponent<Camera>();
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = UIStyle.BgDeep;
             camera.orthographic = true;
+            cameraGo.AddComponent<AudioListener>();
         }
 
         static void EnsureEventSystem()

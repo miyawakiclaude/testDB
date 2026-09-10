@@ -224,6 +224,7 @@ namespace DragonIdle
                 Data.achievements.Add(achievement.Id);
                 _unlocked.Add(achievement.Id);
                 changed = true;
+                Sfx.Play(SfxId.Achievement);
                 Toast("称号「" + achievement.Name + "」を得た（生産 "
                       + NumberFormat.Percent(achievement.Bonus) + "）");
             }
@@ -272,6 +273,13 @@ namespace DragonIdle
 
         public bool LevelUp(DragonSave d)
         {
+            if (!LevelUpCore(d)) return false;
+            Sfx.Play(SfxId.LevelUp);
+            return true;
+        }
+
+        bool LevelUpCore(DragonSave d)
+        {
             double cost = LevelUpCost(d);
             if (Data.gold < cost) return false;
             Data.gold -= cost;
@@ -284,11 +292,12 @@ namespace DragonIdle
             return true;
         }
 
-        /// <summary>まとめて上げる。押しっぱなしにしなくてよくなる。</summary>
+        /// <summary>まとめて上げる。押しっぱなしにしなくてよくなる。音は1回だけ鳴らす。</summary>
         public int LevelUpMany(DragonSave d, int max)
         {
             int done = 0;
-            while (done < max && LevelUp(d)) done++;
+            while (done < max && LevelUpCore(d)) done++;
+            if (done > 0) Sfx.Play(SfxId.LevelUp);
             return done;
         }
 
@@ -364,6 +373,7 @@ namespace DragonIdle
             if (isNew) Data.discovered.Add(species.Id);
 
             StructureVersion++;
+            Sfx.Play(SfxId.Hatch);
             Toast((isNew ? "新種発見！ " : "") + Rarities.Name(rarity) + "の " + species.Name + " が生まれた");
             return d;
         }
@@ -453,6 +463,7 @@ namespace DragonIdle
             Data.evolutions++;
 
             StructureVersion++;
+            Sfx.Play(SfxId.Evolve);
             Toast(before + " が " + next.Name + " に進化した（" + Rarities.Name((Rarity)rarity) + "）");
             return true;
         }
@@ -474,6 +485,7 @@ namespace DragonIdle
             double reward = PetReward;
             AddGold(reward);
             Data.pets++;
+            Sfx.Play(SfxId.Pet);
             return reward;
         }
 
@@ -496,6 +508,7 @@ namespace DragonIdle
             if (Data.gold < cost) return false;
             Data.gold -= cost;
             Data.upgradeLevels[(int)id]++;
+            Sfx.Play(SfxId.Buy);
             if (id == UpgradeId.Nest) StructureVersion++;
             return true;
         }
@@ -552,6 +565,7 @@ namespace DragonIdle
 
             StructureVersion++;
             SaveSystem.Save(Data);
+            Sfx.Play(SfxId.Rebirth);
             Toast("転生した。竜魂を " + gained + " 得た（生産 " + NumberFormat.Percent(0.10 * Data.souls) + "）");
             return true;
         }

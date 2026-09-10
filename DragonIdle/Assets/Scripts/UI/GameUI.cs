@@ -16,6 +16,7 @@ namespace DragonIdle
         Text _soulChip;
         Text _nestChip;
         Text _synergyChip;
+        Text _muteLabel;
 
         readonly List<TabView> _tabs = new List<TabView>();
         readonly List<Button> _tabButtons = new List<Button>();
@@ -108,6 +109,12 @@ namespace DragonIdle
             _soulChip = BuildChip(chipRow.transform, "竜魂 0", UIStyle.Soul);
             _nestChip = BuildChip(chipRow.transform, "巣 1/3", UIStyle.TextDim);
             _synergyChip = BuildChip(chipRow.transform, "属性 1種", UIStyle.Positive);
+
+            Button mute = UIFactory.Button("Mute", chipRow.transform, "", 26, UIStyle.BgPanel2, UIStyle.TextDim);
+            UIFactory.Sizing(mute.gameObject, 56, 148);
+            _muteLabel = mute.GetComponentInChildren<Text>();
+            mute.onClick.AddListener(ToggleMute);
+            RefreshMuteLabel();
         }
 
         Text BuildChip(Transform parent, string caption, Color color)
@@ -259,6 +266,19 @@ namespace DragonIdle
                 _tabLabels[i].color = active ? UIStyle.Gold : UIStyle.TextFaint;
             }
             _tabs[index].Refresh();
+        }
+
+        void ToggleMute()
+        {
+            Sfx.Muted = !Sfx.Muted;
+            RefreshMuteLabel();
+            if (!Sfx.Muted) Sfx.Play(SfxId.Buy);   // 戻したことが耳でわかるように
+        }
+
+        void RefreshMuteLabel()
+        {
+            _muteLabel.text = Sfx.Muted ? "音 切" : "音 入";
+            _muteLabel.color = Sfx.Muted ? UIStyle.TextFaint : UIStyle.TextDim;
         }
 
         void OnPet()
